@@ -25,4 +25,10 @@ export default defineNuxtConfig({
     prefix: "",
     componentDir: "./components/ui",
   },
+  runtimeConfig: {
+    public: {
+      appwriteEndpoint: process.env.NUXT_APPWRITE_ENDPOINT,
+      appwriteProjectId: process.env.NUXT_APPWRITE_PROJECT_ID,
+    },
+  },
 });
