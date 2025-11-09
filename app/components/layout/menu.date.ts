@@ -5,35 +5,35 @@ export interface IMenuItem {
 
 export const MENU_DATA: IMenuItem[] = [
   {
-    name: "Home",
+    name: "Главная",
     url: "/",
   },
   {
-    name: "Products",
+    name: "Продукция",
     url: "/products",
   },
   {
-    name: "Payments",
+    name: "Платежи",
     url: "/payments"
   },
   {
-    name: "Orders",
+    name: "Заказы",
     url: "/orders"
   },
   {
-    name: "Customers",
+    name: "Клиенты",
     url: "/customers",
   },
   {
-    name: "Feedback",
+    name: "Обратная связь",
     url: "/feedback",
   },
   {
-    name: "Settings",
+    name: "Параметры",
     url: "/settings",
   },
   {
-    name: "Help center",
+    name: "Справочный центр",
     url: "/help",
   },
 ];
