@@ -20,6 +20,7 @@ export default defineNuxtConfig({
         },
       },
     ],
+    "@pinia/nuxt",
   ],
   shadcn: {
     prefix: "",
@@ -30,5 +31,8 @@ export default defineNuxtConfig({
       appwriteEndpoint: process.env.NUXT_APPWRITE_ENDPOINT,
       appwriteProjectId: process.env.NUXT_APPWRITE_PROJECT_ID,
     },
+  },
+  pinia: {
+    storesDirs: ["./stores/**"],
   },
 });
