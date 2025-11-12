@@ -1,10 +1,50 @@
 <script setup lang="ts">
+import { useSeoMeta } from "nuxt/app";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useIsLoadingStore, useAuthStore } from "~/stores/auth.store";
+import { account } from "~/Util/appwrite";
+import { v4 as uuid } from "uuid";
+
 useSeoMeta({
   title: "Login",
 });
 const emailRef = ref("");
 const passwordRef = ref("");
 const nameRef = ref("");
+
+const isLoadingStore = useIsLoadingStore();
+const authStore = useAuthStore();
+const router = useRouter();
+
+const login = async () => {
+  isLoadingStore.set(true);
+  await account.createEmailPasswordSession(emailRef.value, passwordRef.value);
+  const response = await account.get();
+  if (response) {
+    authStore.set({
+      email: response.email,
+      name: response.name,
+      status: response.status,
+    });
+  }
+  emailRef.value = "";
+  passwordRef.value = "";
+  nameRef.value = "";
+
+  await router.push("/");
+  isLoadingStore.set(false);
+};
+
+const register = async () => {
+  await account.create(
+    uuid(),
+    emailRef.value,
+    passwordRef.value,
+    nameRef.value
+  );
+  await login();
+};
 </script>
 
 <template>
@@ -31,8 +71,8 @@ const nameRef = ref("");
           v-model="nameRef"
         />
         <div class="flex items-center justify-center gap-5">
-          <UiButton type="button">Login</UiButton>
-          <UiButton type="button">Register</UiButton>
+          <UiButton type="button" @click="login">Login</UiButton>
+          <UiButton type="button" @click="register">Register</UiButton>
         </div>
       </form>
     </div>

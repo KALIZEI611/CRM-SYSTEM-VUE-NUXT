@@ -1,10 +1,13 @@
 <template>
   <div class="wrapper">
-    <img src="/loader.svg" alt="" />
+    <NuxtImg src="/loader.svg" alt="" width="200" />
   </div>
 </template>
+
 <style scoped>
+@reference "tailwindcss";
+
 .wrapper {
-  @apply bg-sidebar flex items-center justify-center w-screen h-screen;
+  @apply bg-gray-800 flex items-center justify-center w-screen h-screen;
 }
 </style>

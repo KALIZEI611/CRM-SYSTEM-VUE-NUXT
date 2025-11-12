@@ -7,6 +7,20 @@ export default defineNuxtConfig({
     "nuxt-icon",
     "shadcn-nuxt",
     "@nuxt/image",
+
+    [
+      "@nuxtjs/google-fonts",
+      {
+        families: {
+          Raleway: {
+            wght: [300, 400, 700],
+            ital: [300],
+          },
+        },
+      },
+    ],
+    "@pinia/nuxt",
+
   ],
   shadcn: {
     prefix: "",
@@ -17,5 +31,8 @@ export default defineNuxtConfig({
       appwriteEndpoint: process.env.NUXT_APPWRITE_ENDPOINT,
       appwriteProjectId: process.env.NUXT_APPWRITE_PROJECT_ID,
     },
+  },
+  pinia: {
+    storesDirs: ["./stores/**"],
   },
 });
