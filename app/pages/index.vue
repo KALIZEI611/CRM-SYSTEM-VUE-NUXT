@@ -3,27 +3,51 @@ import { ref } from "vue";
 import type { ICard, IColumn } from "@/kanban/kanban.types";
 import { useSeoMeta } from "nuxt/app";
 import { useKanbarQuery } from "@/kanban/useKanbanQuery";
-
+import { convertCurrency } from "@/Util/convertCurrency";
+import dayjs from "dayjs";
 useSeoMeta({
   title: "Главная",
 });
 
 const dragCard = ref<ICard | null>(null);
 const sourceColumn = ref<IColumn | null>(null);
-useKanbarQuery();
+const { data, isLoading, refetch } = useKanbarQuery();
 </script>
 
 <template>
   <div class="p-10">
     <h1 class="font-bold text-2xl mb-10">СРМ система Михея</h1>
-    <div>
-      <ui-card class="mb-3" draggable="true">
-        <ui-card-header role="button" class="color">
-          Название карточки
-        </ui-card-header>
-        <ui-card-content class="color"> Компания </ui-card-content>
-        <ui-card-footer class="color"> Дата </ui-card-footer>
-      </ui-card>
+    <div v-if="isLoading">Загрузка...</div>
+    <div v-else>
+      <div class="grid grid-cols-5 gap-16">
+        <div v-for="(column, index) in data" :key="column.id">
+          <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center">
+            {{ column.name }}
+          </div>
+          <div>
+            <ui-card
+              v-for="card in column.items"
+              :key="card.id"
+              class="mb-5"
+              draggable="true"
+            >
+              <ui-card-header role="button" class="color">
+                <ui-card-title>{{ card.name }}</ui-card-title>
+                <ui-card-description>
+                  {{ convertCurrency(card.price) }}
+                </ui-card-description>
+              </ui-card-header>
+              <ui-card-content class="color text-xs">
+                <div>Комнания</div>
+                {{ card.companyName }}
+              </ui-card-content>
+              <ui-card-footer class="color">
+                {{ dayjs(card.$createdAt).format("DD MMMM YYYY") }}
+              </ui-card-footer>
+            </ui-card>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
