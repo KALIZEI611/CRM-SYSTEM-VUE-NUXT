@@ -37,8 +37,8 @@ const { data, isLoading, refetch } = useKanbarQuery();
                   {{ convertCurrency(card.price) }}
                 </ui-card-description>
               </ui-card-header>
-              <ui-card-content class="color text-xs">
-                <div>Комнания</div>
+              <ui-card-content class="color text-xs pb-2">
+                <div>Компания</div>
                 {{ card.companyName }}
               </ui-card-content>
               <ui-card-footer class="color">
