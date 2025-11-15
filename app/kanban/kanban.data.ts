@@ -9,7 +9,7 @@ export const KANBAN_DATA: IColumn[] = [
   },
   {
     id: EnumStatus["to-be-agreed"],
-    name: "На согласовании",
+    name: "Cогласование",
     items: [],
   },
   {
