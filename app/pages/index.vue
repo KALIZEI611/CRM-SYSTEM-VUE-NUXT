@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/vue-query";
 import type { EnumStatus } from "~/types/dealt.types";
 import { COLLECTION_DEALS, DB_ID } from "~/constants/app.constants";
 import { DB } from "~/Util/appwrite";
+import { generateColumnStyle } from "~/kanban/generate-gradient";
 
 useSeoMeta({
   title: "Главная",
@@ -60,8 +61,12 @@ const handleDrop = (targetColumn: IColumn) => {
           :key="column.id"
           @dragover="handleDragOver"
           @drop="() => handleDrop(column)"
+          class="min-h-screen"
         >
-          <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center">
+          <div
+            class="rounded bg-slate-700 py-1 px-5 mb-2 text-center"
+            :style="generateColumnStyle(index, data?.length)"
+          >
             {{ column.name }}
           </div>
           <div>

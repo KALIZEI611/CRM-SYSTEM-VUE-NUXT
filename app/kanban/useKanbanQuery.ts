@@ -7,6 +7,7 @@ import {
 } from "~/constants/app.constants";
 import { KANBAN_DATA } from "./kanban.data";
 import type { IDeal } from "~/types/dealt.types";
+import type { IColumn, ICard } from "./kanban.types";
 
 export function useKanbarQuery() {
   return useQuery({
@@ -23,7 +24,12 @@ export function useKanbarQuery() {
       };
     },
     select(data) {
-      const newBoard = [...KANBAN_DATA];
+      // Явно указываем тип для newBoard
+      const newBoard: IColumn[] = KANBAN_DATA.map((column) => ({
+        ...column,
+        items: [] as ICard[],
+      }));
+
       const deals = data.deals as unknown as IDeal[];
       const customers = data.customers;
 
@@ -38,14 +44,17 @@ export function useKanbarQuery() {
         if (column) {
           const customer = customersMap.get(deal.customer);
 
-          column.items.push({
+          // Создаем объект с правильным типом
+          const card: ICard = {
             $createdAt: deal.$createdAt,
             id: deal.$id,
             name: deal.name,
             price: deal.price,
             companyName: customer?.name || "No company",
             status: column.name,
-          });
+          };
+
+          column.items.push(card);
         }
       }
 
