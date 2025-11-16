@@ -5,6 +5,7 @@ import { useSeoMeta } from "nuxt/app";
 import { useKanbarQuery } from "@/kanban/useKanbanQuery";
 import { convertCurrency } from "@/Util/convertCurrency";
 import dayjs from "dayjs";
+import CreateDeal from "./CreateDeal.vue";
 useSeoMeta({
   title: "Главная",
 });
@@ -25,6 +26,7 @@ const { data, isLoading, refetch } = useKanbarQuery();
             {{ column.name }}
           </div>
           <div>
+            <CreateDeal :refetch="refetch" :status="column.id" />
             <ui-card
               v-for="card in column.items"
               :key="card.id"

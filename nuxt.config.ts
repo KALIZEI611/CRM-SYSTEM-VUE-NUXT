@@ -1,4 +1,3 @@
-
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: false },
@@ -7,7 +6,6 @@ export default defineNuxtConfig({
     "nuxt-icon",
     "shadcn-nuxt",
     "@nuxt/image",
-
     [
       "@nuxtjs/google-fonts",
       {
@@ -20,7 +18,13 @@ export default defineNuxtConfig({
       },
     ],
     "@pinia/nuxt",
-
+    "@nuxt/icon",
+    [
+      "@vee-validate/nuxt",
+      {
+        autoImports: true,
+      },
+    ],
   ],
   shadcn: {
     prefix: "",
