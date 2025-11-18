@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { ICard, IColumn } from "@/kanban/kanban.types";
+import type { ICard, IColumn } from "~/components/kanban/kanban.types";
 import { useSeoMeta } from "nuxt/app";
-import { useKanbarQuery } from "@/kanban/useKanbanQuery";
+import { useKanbarQuery } from "~/components/kanban/useKanbanQuery";
 import { convertCurrency } from "@/Util/convertCurrency";
 import dayjs from "dayjs";
 import CreateDeal from "./CreateDeal.vue";
@@ -10,7 +10,8 @@ import { useMutation } from "@tanstack/vue-query";
 import type { EnumStatus } from "~/types/dealt.types";
 import { COLLECTION_DEALS, DB_ID } from "~/constants/app.constants";
 import { DB } from "~/Util/appwrite";
-import { generateColumnStyle } from "~/kanban/generate-gradient";
+import { generateColumnStyle } from "~/components/kanban/generate-gradient";
+import { useDealSlideStore } from "~/stores/deal-slide.store";
 
 useSeoMeta({
   title: "Главная",
@@ -19,6 +20,7 @@ useSeoMeta({
 const dragCardRef = ref<ICard | null>(null);
 const sourceColumnRef = ref<IColumn | null>(null);
 const { data, isLoading, refetch } = useKanbarQuery();
+const store = useDealSlideStore();
 
 type TypeMutationVariables = {
   docId: string;
@@ -78,7 +80,11 @@ const handleDrop = (targetColumn: IColumn) => {
               draggable="true"
               @dragstart="() => handleDragStart(card, column)"
             >
-              <ui-card-header role="button" class="color">
+              <ui-card-header
+                role="button"
+                class="color"
+                @click="store.set(card)"
+              >
                 <ui-card-title>{{ card.name }}</ui-card-title>
                 <ui-card-description>
                   {{ convertCurrency(card.price) }}
@@ -95,6 +101,7 @@ const handleDrop = (targetColumn: IColumn) => {
           </div>
         </div>
       </div>
+      <KanbanSlideover />
     </div>
   </div>
 </template>
@@ -104,3 +111,5 @@ const handleDrop = (targetColumn: IColumn) => {
   color: white;
 }
 </style>
+
+function useDealSlideStore() { throw new Error("Function not implemented."); }
