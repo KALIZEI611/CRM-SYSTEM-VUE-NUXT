@@ -101,8 +101,8 @@ const handleDrop = (targetColumn: IColumn) => {
           </div>
         </div>
       </div>
-      <KanbanSlideover />
     </div>
+    <KanbanSlideover />
   </div>
 </template>
 
@@ -111,5 +111,3 @@ const handleDrop = (targetColumn: IColumn) => {
   color: white;
 }
 </style>
-
-function useDealSlideStore() { throw new Error("Function not implemented."); }

@@ -5,27 +5,27 @@ import { convertCurrency } from "~/Util/convertCurrency";
 
 const store = useDealSlideStore();
 </script>
-
 <template>
-  <div class="border-border bg-black/50 rounded p-3">
-    <div class="text-xl uppercase bold mb-4">О сделке</div>
-    <kanban-slideover-label label-text="Наименование">
+  <div class="border-border bg-black/20 rounded p-3">
+    <div class="uppercase bold text-xl mb-4">О сделке</div>
+    <KanbanSlideoverLabel label-text="Наименование">
       <h2>
         {{ store.card?.name }}
       </h2>
-    </kanban-slideover-label>
-    <kanban-slideover-label label-text="Сумма">
+    </KanbanSlideoverLabel>
+    <KanbanSlideoverLabel label-text="Сумма">
       {{ convertCurrency(store.card?.price || 0) }}
-    </kanban-slideover-label>
-
-    <kanban-slideover-label label-text="Статус">
+    </KanbanSlideoverLabel>
+    <KanbanSlideoverLabel label-text="Статус">
       <UiBadge variant="outline">
         {{ store.card?.status }}
       </UiBadge>
-    </kanban-slideover-label>
-
-    <kanban-slideover-label label-text="Клиент">
-      {{ dayjs(store.card?.companyName).format("DD MMMM YYYY") }}
-    </kanban-slideover-label>
+    </KanbanSlideoverLabel>
+    <KanbanSlideoverLabel label-text="Клиент">
+      {{ store.card?.companyName }}
+    </KanbanSlideoverLabel>
+    <KanbanSlideoverLabel label-text="Дата создания">
+      {{ dayjs(store.card?.$createdAt).format("DD MMMM YYYY") }}
+    </KanbanSlideoverLabel>
   </div>
 </template>
