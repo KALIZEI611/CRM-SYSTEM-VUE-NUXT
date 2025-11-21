@@ -30,25 +30,21 @@ const showOverlay = computed(() => isLocalOpen.value);
         class="fixed inset-y-0 right-0 z-50 w-full max-w-sm h-full"
         @click.stop
       >
-        <USlideover v-model="isLocalOpen">
-          <UCard
-            class="flex flex-col flex-1 overflow-y-auto h-full border-0 shadow-none ring-0 bg-black"
-            :ui="{
-              base: 'border-0 shadow-none ring-0 ',
-              body: { base: 'flex-1' },
-              ring: 'ring-0',
-              shadow: 'shadow-none',
-              rounded: 'rounded-none',
-              divide: 'divide-y divide-border',
-            }"
-          >
-            <template #header>
-              <KanbanSlideoverTop />
-            </template>
+        <UCard
+          class="flex flex-col flex-1 overflow-y-auto h-full border-0 shadow-none ring-0 bg-slate-700"
+          :ui="{
+            body: { base: 'flex-1' },
+            ring: 'ring-0',
+            rounded: 'rounded-none',
+            divide: 'divide-y divide-border',
+          }"
+        >
+          <template #header>
+            <KanbanSlideoverTop />
+          </template>
 
-            <KanbanSlideoverComments />
-          </UCard>
-        </USlideover>
+          <KanbanSlideoverComments />
+        </UCard>
       </div>
     </Transition>
   </div>
