@@ -5,6 +5,7 @@ import type { ICustomer } from "~/types/dealt.types";
 import { useRoute, useSeoMeta } from "nuxt/app";
 import { useForm } from "#imports";
 import { DB } from "~/Util/appwrite";
+import { computed, watchEffect } from "vue";
 
 interface ICustomerFormState
   extends Pick<ICustomer, "avatar_url" | "email" | "name" | "from_source"> {}
@@ -19,19 +20,31 @@ const customerId = route.params.id as string;
 const { handleSubmit, defineField, setFieldValue, setValues, values } =
   useForm<ICustomerFormState>();
 
-const { data, isSuccess } = useQuery({
+const { data, isSuccess, isLoading } = useQuery({
   queryKey: ["get customer", customerId],
   queryFn: () => DB.getDocument(DB_ID, COLLECTION_CUSTOMERS, customerId),
 });
+watchEffect(() => {
+  if (data.value) {
+    const initialData = data.value as unknown as ICustomerFormState;
+    setValues({
+      email: initialData.email,
+      avatar_url: initialData.avatar_url,
+      from_source: initialData.from_source || "",
+      name: initialData.name,
+    });
+  }
+});
 
-watch(isSuccess, () => {
-  const initialData = data.value as unknown as ICustomerFormState;
-  setValues({
-    email: initialData.email,
-    avatar_url: initialData.avatar_url,
-    from_source: initialData.from_source || "",
-    name: initialData.name,
-  });
+const pageTitle = computed(() => {
+  const customerName = (data.value as unknown as ICustomerFormState)?.name;
+  return customerName
+    ? `Редактирование ${customerName}`
+    : "Редактирование компании";
+});
+
+useSeoMeta({
+  title: pageTitle,
 });
 
 const [name, nameAttrs] = defineField("name");
@@ -52,10 +65,12 @@ const onSubmit = handleSubmit((values) => {
 <template>
   <div class="p-10">
     <h1 class="font-bold text-2xl mb-10">
-      Редактирование {{ (data as unknown as ICustomerFormState)?.name }}
+      {{ pageTitle }}
     </h1>
 
-    <form @submit="onSubmit" class="form">
+    <div v-if="isLoading" class="text-center py-8">Загрузка данных...</div>
+
+    <form v-else @submit="onSubmit" class="form">
       <UiInput
         placeholder="Наименование"
         v-model="name"
@@ -71,6 +86,7 @@ const onSubmit = handleSubmit((values) => {
         type="text"
         class="input mb-4"
       />
+
       <UiInput
         placeholder="Откуда пришел?"
         v-model="fromSource"
@@ -82,14 +98,19 @@ const onSubmit = handleSubmit((values) => {
       <img
         v-if="values.avatar_url"
         :src="values.avatar_url"
-        alt=""
+        alt="Avatar"
         width="120"
         height="120"
-        class="rounded-full my-4"
+        class="rounded-full my-4 object-cover"
       />
 
-      <UiButton :disabled="isPending" variant="secondary" class="mt-3">
-        {{ isPending ? "Загрузка..." : "Сохранить" }}
+      <UiButton
+        :disabled="isPending"
+        variant="secondary"
+        class="mt-3"
+        type="submit"
+      >
+        {{ isPending ? "Сохранение..." : "Сохранить" }}
       </UiButton>
     </form>
   </div>
