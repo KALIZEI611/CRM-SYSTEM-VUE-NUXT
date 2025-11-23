@@ -4,6 +4,7 @@ export interface IBaseField {
 }
 
 export interface ICustomer extends IBaseField {
+  id: PropertyKey | undefined;
   name: string;
   email: string;
   avatar_url: string;
