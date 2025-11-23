@@ -87,3 +87,8 @@
     font-family: Arial, Helvetica, sans-serif;
   }
 }
+@layer components {
+  .input-base {
+    @apply border border-[#161c26]  placeholder:text-[#748092] focus:border-border transition-colors;
+  }
+}
