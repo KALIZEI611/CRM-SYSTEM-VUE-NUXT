@@ -35,7 +35,7 @@ const { data: customers, isLoading } = useQuery({
         >
           <ui-table-cell>
             <nuxt-link :href="`/customers/edit/${customer.$id}`">
-              <nuxt-img
+              <img
                 :src="customer.avatar_url"
                 :alt="customer.name"
                 width="50"
