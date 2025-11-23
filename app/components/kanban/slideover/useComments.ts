@@ -1,8 +1,7 @@
-// useComments.ts
 import { useQuery } from "@tanstack/vue-query";
 import { useDealSlideStore } from "~/stores/deal-slide.store";
 import { COLLECTION_COMMENTS, DB_ID } from "~/constants/app.constants";
-import { DB, Query } from "~/Util/appwrite"; // Теперь Query будет доступен
+import { DB, Query } from "~/Util/appwrite";
 
 export function useComments() {
   const store = useDealSlideStore();
