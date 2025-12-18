@@ -1,39 +1,48 @@
 export interface IMenuItem {
   name: string;
   url: string;
+  icon: string;
 }
 
 export const MENU_DATA: IMenuItem[] = [
   {
-    name: "Главная",
+    icon: "radix-icons:dashboard",
+    name: "Домой",
     url: "/",
   },
   {
-    name: "Продукция",
+    name: "Продукты",
+    icon: "ep:goods",
     url: "/products",
   },
   {
     name: "Платежи",
-    url: "/payments"
+    icon: "ph:contactless-payment",
+    url: "/payments",
   },
   {
     name: "Заказы",
-    url: "/orders"
+    icon: "fluent:receipt-28-regular",
+    url: "/orders",
   },
   {
     name: "Клиенты",
+    icon: "mingcute:group-line",
     url: "/customers",
   },
   {
     name: "Обратная связь",
+    icon: "fluent:person-feedback-48-regular",
     url: "/feedback",
   },
   {
-    name: "Параметры",
+    name: "Настройки",
+    icon: "radix-icons:gear",
     url: "/settings",
   },
   {
     name: "Справочный центр",
+    icon: "radix-icons:question-mark",
     url: "/help",
   },
 ];
