@@ -10,6 +10,7 @@ import { MENU_DATA } from "./menu.date";
       :key="item.name"
       :to="item.url"
     >
+      <Icon :name="item.icon" class="mr-3" />
       <span>{{ item.name }}</span>
     </NuxtLink>
   </div>

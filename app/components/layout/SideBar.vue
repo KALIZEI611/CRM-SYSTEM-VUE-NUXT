@@ -26,7 +26,7 @@ const logout = async () => {
         @click="logout"
         class="absolute top-2 right-3 transition-colors hover:text-purple-400"
       >
-        Выход
+        <Icon name="line-md:logout" size="20" />
       </button>
       <LayoutMenu />
     </aside>

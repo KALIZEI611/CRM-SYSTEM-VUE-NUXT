@@ -12,8 +12,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        sidebar: "#1f2937", // или ваш цвет
-        // или с разными вариантами
+        sidebar: "#1f2937",
         sidebar: {
           DEFAULT: "#1f2937",
           light: "#374151",
