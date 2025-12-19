@@ -1,8 +1,38 @@
+<script setup lang="ts">
+import { useHelpCenter } from "~/Util/useHelpCenter";
+
+const {
+  searchQuery,
+  activeCategory,
+  activeArticle,
+  searchResults,
+  showFeedbackModal,
+  userFeedback,
+  feedbackForm,
+  categories,
+  quickActions,
+  articles,
+  popularArticles,
+  currentCategoryName,
+  currentArticles,
+  searchArticles,
+  setActiveCategory,
+  openArticle,
+  closeArticle,
+  getCategoryName,
+  getArticleById,
+  formatDate,
+  sendFeedback,
+  openFeedbackModal,
+  closeFeedbackModal,
+  submitFeedback,
+} = useHelpCenter();
+</script>
+
 <template>
   <div
     class="help-center min-h-screen bg-background text-foreground p-4 md:p-6"
   >
-    <!-- Шапка с поиском -->
     <div class="max-w-7xl mx-auto">
       <div
         class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8"
@@ -41,9 +71,7 @@
         </div>
       </div>
 
-      <!-- Основной контент -->
       <div class="flex flex-col lg:flex-row gap-6">
-        <!-- Боковая навигация -->
         <div class="lg:w-64 flex-shrink-0">
           <div class="bg-card rounded-xl border border-border p-4 mb-6">
             <nav>
@@ -74,7 +102,6 @@
               </ul>
             </nav>
 
-            <!-- Популярные статьи -->
             <div class="mt-6 pt-6 border-t border-border">
               <h3 class="font-semibold text-foreground mb-3">
                 Популярные статьи
@@ -93,10 +120,8 @@
           </div>
         </div>
 
-        <!-- Основная область -->
         <div class="flex-1">
           <div class="bg-card rounded-xl border border-border p-4 md:p-6">
-            <!-- Результаты поиска -->
             <div v-if="searchResults.length > 0">
               <h2 class="text-xl font-semibold text-foreground mb-4">
                 Результаты поиска ({{ searchResults.length }})
@@ -125,9 +150,7 @@
               </div>
             </div>
 
-            <!-- Категории и статьи -->
             <div v-else-if="!activeArticle">
-              <!-- Быстрые действия -->
               <div class="mb-8">
                 <h2 class="text-xl font-semibold text-foreground mb-4">
                   Как начать работу?
@@ -154,7 +177,6 @@
                 </div>
               </div>
 
-              <!-- Статьи по категориям -->
               <div>
                 <h2 class="text-xl font-semibold text-foreground mb-4">
                   {{ currentCategoryName }}
@@ -218,7 +240,6 @@
               </div>
             </div>
 
-            <!-- Детальная статья -->
             <div v-if="activeArticle" class="article-detail">
               <div class="mb-6">
                 <button
@@ -376,8 +397,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Кнопка обратной связи -->
     <button
       @click="openFeedbackModal"
       class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
@@ -397,7 +416,6 @@
       </svg>
     </button>
 
-    <!-- Модальное окно обратной связи -->
     <div
       v-if="showFeedbackModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -474,46 +492,9 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { useHelpCenter } from "~/Util/useHelpCenter";
 
-const {
-  // Реактивные данные
-  searchQuery,
-  activeCategory,
-  activeArticle,
-  searchResults,
-  showFeedbackModal,
-  userFeedback,
-  feedbackForm,
-
-  // Статические данные
-  categories,
-  quickActions,
-  articles,
-  popularArticles,
-
-  // Вычисляемые свойства
-  currentCategoryName,
-  currentArticles,
-
-  // Методы
-  searchArticles,
-  setActiveCategory,
-  openArticle,
-  closeArticle,
-  getCategoryName,
-  getArticleById,
-  formatDate,
-  sendFeedback,
-  openFeedbackModal,
-  closeFeedbackModal,
-  submitFeedback,
-} = useHelpCenter();
-</script>
 
 <style>
-/* Кастомные стили для улучшения отображения */
 .prose {
   color: var(--foreground);
 }
@@ -545,7 +526,6 @@ const {
   color: color-mix(in srgb, var(--foreground) 90%, transparent);
 }
 
-/* Анимация для кнопки обратной связи */
 @keyframes pulse {
   0%,
   100% {
