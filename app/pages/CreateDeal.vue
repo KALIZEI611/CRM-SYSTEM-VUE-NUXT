@@ -3,12 +3,7 @@ import { useForm } from "#imports";
 import { useMutation } from "@tanstack/vue-query";
 import { v4 as uuid } from "uuid";
 import { defineProps, ref } from "vue";
-import {
-  COLLECTION_CUSTOMERS,
-  COLLECTION_DEALS,
-  DB_ID,
-} from "~/constants/app.constants";
-import type { IDeal } from "~/types/dealt.types";
+import { COLLECTION_CUSTOMERS, COLLECTION_DEALS, DB_ID } from "~/constants/app.constants";
 import { DB } from "~/Util/appwrite";
 
 const isOpenForm = ref(false);
@@ -45,22 +40,13 @@ const [customerName, customerNameAttrs] = defineField("customerName");
 const { mutate, isPending } = useMutation({
   mutationKey: ["create a new deal"],
   mutationFn: async (data: IDealFormState) => {
-    // Сначала создаем клиента
-    const customer = await DB.createDocument(
-      DB_ID,
-      COLLECTION_CUSTOMERS,
-      uuid(),
-      {
-        name: data.customerName,
-        email: data.customerEmail,
-      }
-    );
-
-    // Затем создаем сделку с ссылкой на клиента
-    // Для relation полей в Appwrite нужно использовать специальный формат
+    const customer = await DB.createDocument(DB_ID, COLLECTION_CUSTOMERS, uuid(), {
+      name: data.customerName,
+      email: data.customerEmail,
+    });
     return DB.createDocument(DB_ID, COLLECTION_DEALS, uuid(), {
       name: data.name,
-      price: Number(data.price), // Убедимся, что это число
+      price: Number(data.price),
       status: data.status || props.status,
       customer: customer.$id,
     });
@@ -72,7 +58,6 @@ const { mutate, isPending } = useMutation({
   },
   onError(error) {
     console.error(error);
-    // Можно добавить уведомление об ошибке для пользователя
   },
 });
 

@@ -24,7 +24,6 @@ export function useKanbarQuery() {
       };
     },
     select(data) {
-      // Явно указываем тип для newBoard
       const newBoard: IColumn[] = KANBAN_DATA.map((column) => ({
         ...column,
         items: [] as ICard[],
@@ -33,7 +32,6 @@ export function useKanbarQuery() {
       const deals = data.deals as unknown as IDeal[];
       const customers = data.customers;
 
-      // Создаем мапу customers для быстрого доступа
       const customersMap = new Map();
       customers.forEach((customer) => {
         customersMap.set(customer.$id, customer);
@@ -44,7 +42,6 @@ export function useKanbarQuery() {
         if (column) {
           const customer = customersMap.get(deal.customer);
 
-          // Создаем объект с правильным типом
           const card: ICard = {
             $createdAt: deal.$createdAt,
             id: deal.$id,
