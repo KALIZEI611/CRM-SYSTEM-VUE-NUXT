@@ -8,7 +8,6 @@ import type {
 } from "./types";
 
 export function useHelpCenter() {
-  // Реактивные данные с типами
   const searchQuery: Ref<string> = ref("");
   const activeCategory: Ref<string> = ref("getting-started");
   const activeArticle: Ref<Article | null> = ref(null);
@@ -22,16 +21,15 @@ export function useHelpCenter() {
     email: "",
   });
 
-  // Данные с типами
   const categories: Category[] = [
-    { id: "getting-started", name: "Начало работы", count: 8 },
-    { id: "clients", name: "Работа с клиентами", count: 12 },
-    { id: "tasks", name: "Задачи и проекты", count: 10 },
-    { id: "analytics", name: "Аналитика и отчеты", count: 6 },
-    { id: "settings", name: "Настройки системы", count: 15 },
-    { id: "billing", name: "Оплата и биллинг", count: 5 },
-    { id: "api", name: "API и интеграции", count: 7 },
-    { id: "troubleshooting", name: "Решение проблем", count: 9 },
+    { id: "getting-started", name: "Начало работы", count: 3 },
+    { id: "clients", name: "Работа с клиентами", count: 1 },
+    { id: "tasks", name: "Задачи и проекты", count: 0 },
+    { id: "analytics", name: "Аналитика и отчеты", count: 0 },
+    { id: "settings", name: "Настройки системы", count: 1 },
+    { id: "billing", name: "Оплата и биллинг", count: 0 },
+    { id: "api", name: "API и интеграции", count: 0 },
+    { id: "troubleshooting", name: "Решение проблем", count: 0 },
   ];
 
   const quickActions: QuickAction[] = [
@@ -130,7 +128,6 @@ export function useHelpCenter() {
     { id: 104, title: "Настройка уведомлений" },
   ];
 
-  // Вычисляемые свойства с типами
   const currentCategoryName = computed(() => {
     const category = categories.find((c) => c.id === activeCategory.value);
     return category ? category.name : "";
@@ -142,7 +139,6 @@ export function useHelpCenter() {
     );
   });
 
-  // Методы
   const searchArticles = (): void => {
     if (!searchQuery.value.trim()) {
       searchResults.value = [];
@@ -220,9 +216,7 @@ export function useHelpCenter() {
     alert("Спасибо за ваше сообщение! Мы ответим вам в ближайшее время.");
   };
 
-  // Возвращаем все реактивные данные и методы
   return {
-    // Реактивные данные
     searchQuery,
     activeCategory,
     activeArticle,
@@ -231,17 +225,14 @@ export function useHelpCenter() {
     userFeedback,
     feedbackForm,
 
-    // Статические данные
     categories,
     quickActions,
     articles,
     popularArticles,
 
-    // Вычисляемые свойства
     currentCategoryName,
     currentArticles,
 
-    // Методы
     searchArticles,
     setActiveCategory,
     openArticle,
@@ -256,5 +247,4 @@ export function useHelpCenter() {
   };
 }
 
-// Тип для возвращаемого значения useHelpCenter
 export type UseHelpCenterReturn = ReturnType<typeof useHelpCenter>;

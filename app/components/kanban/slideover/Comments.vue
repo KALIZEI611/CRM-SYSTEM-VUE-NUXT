@@ -8,7 +8,6 @@ const store = useDealSlideStore();
 const { data, refetch, isLoading } = useComments();
 const { commentRef, writeComment } = useCreateComment({ refetch });
 
-// Для отладки
 console.log("Comments data:", data);
 </script>
 
