@@ -114,7 +114,7 @@ export function useHelpCenter() {
       excerpt: "Настройте email и push уведомления для вашей команды",
       category: "settings",
       content:
-        '<h3 class="text-xl font-semibold text-foreground mb-3">Настройка уведомлений</h3><p class="mb-2 text-foreground/90">Настройте систему уведомлений чтобы быть в курсе важных событий.</p><p class="mb-2 text-foreground/90">Доступные типы уведомлений:</p><ul class="list-disc pl-5 mb-2 text-foreground/90"><li>Email уведомления</li><li>Push уведомления в браузере</li><li>Webhook для интеграции</li></ul>',
+        '<h3 class="text-xl font-semibold text-foreground mb-3">Настройка уведомлений</h3><p class="mb-2 text-foreground/90">Настройте систему уведомлений чтобы быть в курсе важных событий.</p><p class="mb-2 text-foreground/90">Доступные типы уведомлений:</p><ul class="list-disc pl-5 mb-2 text-foreground/90"><li>Email уведомления</li><li>Push уведомления в браузере</li></ul>',
       readTime: 6,
       updated: "2024-01-20",
       related: [102, 103],
