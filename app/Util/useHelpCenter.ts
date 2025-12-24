@@ -72,7 +72,7 @@ export function useHelpCenter() {
       content:
         '<h3 class="text-xl font-semibold text-foreground mb-3">Создание задачи</h3><p class="mb-2 text-foreground/90">1. Нажмите кнопку "Новая задача" в верхней панели</p><p class="mb-2 text-foreground/90">2. Заполните основные поля: название, описание, сроки</p><p class="mb-2 text-foreground/90">3. Назначьте ответственного сотрудника</p><p class="mb-2 text-foreground/90">4. Добавьте теги для удобной фильтрации</p>',
       readTime: 3,
-      updated: "2024-01-15",
+      updated: new Date().toISOString().split("T")[0], // Сегодняшняя дата
       related: [102, 103],
     },
     {
@@ -83,7 +83,7 @@ export function useHelpCenter() {
       content:
         '<h3 class="text-xl font-semibold text-foreground mb-3">Добавление клиента</h3><p class="mb-2 text-foreground/90">1. Перейдите в раздел "Клиенты"</p><p class="mb-2 text-foreground/90">2. Нажмите кнопку "Добавить клиента"</p><p class="mb-2 text-foreground/90">3. Заполните контактную информацию</p><p class="mb-2 text-foreground/90">4. Добавьте дополнительные поля при необходимости</p>',
       readTime: 5,
-      updated: "2024-01-10",
+      updated: new Date().toISOString().split("T")[0], // Сегодняшняя дата
       related: [101, 104],
     },
     {
@@ -94,7 +94,7 @@ export function useHelpCenter() {
       content:
         '<h3 class="text-xl font-semibold text-foreground mb-3">Сегментация клиентской базы</h3><p class="mb-2 text-foreground/90">Сегментация позволяет эффективно работать с разными группами клиентов.</p><p class="mb-2 text-foreground/90">Основные методы сегментации:</p><ul class="list-disc pl-5 mb-2 text-foreground/90"><li>По активности</li><li>По объему покупок</li><li>По типу бизнеса</li><li>По региону</li></ul>',
       readTime: 7,
-      updated: "2024-01-12",
+      updated: new Date().toISOString().split("T")[0], // Сегодняшняя дата
       related: [202, 203],
     },
     {
@@ -105,7 +105,7 @@ export function useHelpCenter() {
       content:
         '<h3 class="text-xl font-semibold text-foreground mb-3">Создание отчетов</h3><p class="mb-2 text-foreground/90">1. Перейдите в раздел "Аналитика"</p><p class="mb-2 text-foreground/90">2. Выберите тип отчета</p><p class="mb-2 text-foreground/90">3. Настройте параметры и фильтры</p><p class="mb-2 text-foreground/90">4. Экспортируйте или сохраните отчет</p>',
       readTime: 4,
-      updated: "2024-01-18",
+      updated: new Date().toISOString().split("T")[0], // Сегодняшняя дата
       related: [101, 201],
     },
     {
@@ -116,7 +116,7 @@ export function useHelpCenter() {
       content:
         '<h3 class="text-xl font-semibold text-foreground mb-3">Настройка уведомлений</h3><p class="mb-2 text-foreground/90">Настройте систему уведомлений чтобы быть в курсе важных событий.</p><p class="mb-2 text-foreground/90">Доступные типы уведомлений:</p><ul class="list-disc pl-5 mb-2 text-foreground/90"><li>Email уведомления</li><li>Push уведомления в браузере</li></ul>',
       readTime: 6,
-      updated: "2024-01-20",
+      updated: new Date().toISOString().split("T")[0], // Сегодняшняя дата
       related: [102, 103],
     },
   ];

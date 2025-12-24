@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from "vue";
 import type { Ref } from "vue";
 import { useAuthStore } from "@/stores/auth.store";
 import { userSettingsApi } from "@/api/userSettings.api";
+import { useSeoMeta } from "nuxt/app";
 
 const authStore = useAuthStore();
 
@@ -198,6 +199,10 @@ function debounce<T extends (...args: any[]) => any>(
     }, delay);
   };
 }
+
+useSeoMeta({
+  title: "Настройки",
+});
 </script>
 
 <template>
