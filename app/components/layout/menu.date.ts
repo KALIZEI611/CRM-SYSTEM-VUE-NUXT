@@ -7,7 +7,7 @@ export interface IMenuItem {
 export const MENU_DATA: IMenuItem[] = [
   {
     icon: "radix-icons:dashboard",
-    name: "Домой",
+    name: "Главная",
     url: "/",
   },
   {
@@ -16,19 +16,9 @@ export const MENU_DATA: IMenuItem[] = [
     url: "/payments",
   },
   {
-    name: "Заказы",
-    icon: "fluent:receipt-28-regular",
-    url: "/orders",
-  },
-  {
     name: "Клиенты",
     icon: "mingcute:group-line",
     url: "/customers",
-  },
-  {
-    name: "Обратная связь",
-    icon: "fluent:person-feedback-48-regular",
-    url: "/feedback",
   },
   {
     name: "Настройки",
