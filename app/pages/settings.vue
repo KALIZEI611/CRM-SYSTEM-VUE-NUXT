@@ -1,15 +1,214 @@
+<script setup lang="ts">
+import { ref, onMounted, watch } from "vue";
+import type { Ref } from "vue";
+import { useAuthStore } from "@/stores/auth.store";
+import { userSettingsApi } from "@/api/userSettings.api";
+
+const authStore = useAuthStore();
+
+const emailEnabled: Ref<boolean> = ref(true);
+const emailDaily: Ref<boolean> = ref(true);
+const emailWeekly: Ref<boolean> = ref(true);
+const emailNewLead: Ref<boolean> = ref(true);
+const emailNewTask: Ref<boolean> = ref(true);
+const emailPayment: Ref<boolean> = ref(true);
+const emailAddress: Ref<string> = ref("");
+
+const pushEnabled: Ref<boolean> = ref(false);
+const pushNewLead: Ref<boolean> = ref(true);
+const pushNewMessage: Ref<boolean> = ref(true);
+const pushTaskDeadline: Ref<boolean> = ref(true);
+const pushUrgentTask: Ref<boolean> = ref(true);
+const hasPushPermission: Ref<boolean> = ref(false);
+
+const isLoading: Ref<boolean> = ref(false);
+
+onMounted(async (): Promise<void> => {
+  hasPushPermission.value =
+    "Notification" in window && Notification.permission === "granted";
+
+  if (authStore.isAuth) {
+    await loadSettings();
+  }
+});
+
+watch(
+  [
+    emailEnabled,
+    emailDaily,
+    emailWeekly,
+    emailNewLead,
+    emailNewTask,
+    emailPayment,
+    emailAddress,
+    pushEnabled,
+    pushNewLead,
+    pushNewMessage,
+    pushTaskDeadline,
+    pushUrgentTask,
+  ],
+  debounce(async (): Promise<void> => {
+    if (authStore.isAuth) {
+      await saveSettings();
+    }
+  }, 1000)
+);
+
+const loadSettings = async (): Promise<void> => {
+  isLoading.value = true;
+  try {
+    const savedSettings = await userSettingsApi.loadSettings();
+
+    if (savedSettings) {
+      emailEnabled.value = savedSettings.emailEnabled ?? true;
+      emailDaily.value = savedSettings.emailDaily ?? true;
+      emailWeekly.value = savedSettings.emailWeekly ?? true;
+      emailNewLead.value = savedSettings.emailNewLead ?? true;
+      emailNewTask.value = savedSettings.emailNewTask ?? true;
+      emailPayment.value = savedSettings.emailPayment ?? true;
+      emailAddress.value = savedSettings.emailAddress || "";
+      pushEnabled.value = savedSettings.pushEnabled ?? false;
+      pushNewLead.value = savedSettings.pushNewLead ?? true;
+      pushNewMessage.value = savedSettings.pushNewMessage ?? true;
+      pushTaskDeadline.value = savedSettings.pushTaskDeadline ?? true;
+      pushUrgentTask.value = savedSettings.pushUrgentTask ?? true;
+    }
+  } catch (error) {
+    console.error("Ошибка загрузки настроек:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const saveSettings = async (): Promise<void> => {
+  if (!authStore.isAuth) {
+    alert("Для сохранения настроек необходимо войти в систему");
+    return;
+  }
+
+  try {
+    const settings = {
+      emailEnabled: emailEnabled.value,
+      emailDaily: emailDaily.value,
+      emailWeekly: emailWeekly.value,
+      emailNewLead: emailNewLead.value,
+      emailNewTask: emailNewTask.value,
+      emailPayment: emailPayment.value,
+      emailAddress: emailAddress.value,
+      pushEnabled: pushEnabled.value,
+      pushNewLead: pushNewLead.value,
+      pushNewMessage: pushNewMessage.value,
+      pushTaskDeadline: pushTaskDeadline.value,
+      pushUrgentTask: pushUrgentTask.value,
+    };
+
+    await userSettingsApi.saveSettings(settings);
+    console.log("Настройки сохранены");
+  } catch (error) {
+    console.error("Ошибка сохранения настроек:", error);
+    alert("Не удалось сохранить настройки");
+  }
+};
+
+const enableAll = async (): Promise<void> => {
+  emailEnabled.value = true;
+  emailDaily.value = true;
+  emailWeekly.value = true;
+  emailNewLead.value = true;
+  emailNewTask.value = true;
+  emailPayment.value = true;
+
+  pushEnabled.value = true;
+  pushNewLead.value = true;
+  pushNewMessage.value = true;
+  pushTaskDeadline.value = true;
+  pushUrgentTask.value = true;
+
+  if (!hasPushPermission.value) {
+    await requestPushPermission();
+  }
+
+  alert("Все уведомления включены!");
+  await saveSettings();
+};
+
+const disableAll = async (): Promise<void> => {
+  emailEnabled.value = false;
+  pushEnabled.value = false;
+  alert("Все уведомления отключены!");
+  await saveSettings();
+};
+
+const resetSettings = async (): Promise<void> => {
+  if (confirm("Сбросить все настройки к значениям по умолчанию?")) {
+    emailEnabled.value = true;
+    emailDaily.value = true;
+    emailWeekly.value = true;
+    emailNewLead.value = true;
+    emailNewTask.value = true;
+    emailPayment.value = true;
+    emailAddress.value = "";
+
+    pushEnabled.value = false;
+    pushNewLead.value = true;
+    pushNewMessage.value = true;
+    pushTaskDeadline.value = true;
+    pushUrgentTask.value = true;
+
+    try {
+      await userSettingsApi.deleteSettings();
+      alert("Настройки сброшены к значениям по умолчанию!");
+    } catch (error) {
+      console.error("Ошибка сброса настроек:", error);
+    }
+  }
+};
+
+const requestPushPermission = async (): Promise<void> => {
+  if (!("Notification" in window)) {
+    alert("Ваш браузер не поддерживает push-уведомления");
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  hasPushPermission.value = permission === "granted";
+
+  if (hasPushPermission.value) {
+    alert("Разрешение на push-уведомления получено!");
+    pushEnabled.value = true;
+  } else {
+    alert(
+      "Разрешение на push-уведомления не получено. Проверьте настройки браузера."
+    );
+  }
+
+  await saveSettings();
+};
+
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+</script>
+
 <template>
   <div class="min-h-screen p-4">
     <div class="max-w-7xl mx-auto">
-      <!-- Заголовок -->
       <div class="mb-8 ml-6">
         <h1 class="text-2xl md:text-3xl font-bold mb-2">Настройки</h1>
         <p class="text-gray-500">Настройте систему уведомлений</p>
       </div>
 
-      <!-- Основной контент -->
       <div class="p-4 md:p-6">
-        <!-- Email уведомления -->
         <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold flex items-center gap-2">
@@ -114,7 +313,6 @@
           </div>
         </div>
 
-        <!-- Push уведомления -->
         <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-semibold flex items-center gap-2">
@@ -211,31 +409,30 @@
           </div>
         </div>
 
-        <!-- Кнопки действий -->
         <div
           class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-300"
         >
           <button
             @click="saveSettings"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             Сохранить настройки
           </button>
           <button
             @click="enableAll"
-            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors"
           >
             Включить все
           </button>
           <button
             @click="disableAll"
-            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors"
           >
             Отключить все
           </button>
           <button
             @click="resetSettings"
-            class="px-6 py-3 border border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+            class="px-6 py-3 border border-red-800 text-white rounded-lg hover:bg-red-800 transition-colors"
           >
             Сбросить
           </button>
@@ -244,144 +441,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, onMounted } from "vue";
-
-// Состояния для email уведомлений
-const emailEnabled = ref(true);
-const emailDaily = ref(true);
-const emailWeekly = ref(true);
-const emailNewLead = ref(true);
-const emailNewTask = ref(true);
-const emailPayment = ref(true);
-const emailAddress = ref("");
-
-// Состояния для push уведомлений
-const pushEnabled = ref(false);
-const pushNewLead = ref(true);
-const pushNewMessage = ref(true);
-const pushTaskDeadline = ref(true);
-const pushUrgentTask = ref(true);
-const hasPushPermission = ref(false);
-
-// Проверяем разрешение на push при загрузке
-onMounted(() => {
-  hasPushPermission.value =
-    "Notification" in window && Notification.permission === "granted";
-  loadSettings();
-});
-
-// Загрузка сохраненных настроек
-const loadSettings = () => {
-  const saved = localStorage.getItem("crm_notification_settings");
-  if (saved) {
-    const settings = JSON.parse(saved);
-    emailEnabled.value = settings.emailEnabled ?? true;
-    emailDaily.value = settings.emailDaily ?? true;
-    emailWeekly.value = settings.emailWeekly ?? true;
-    emailNewLead.value = settings.emailNewLead ?? true;
-    emailNewTask.value = settings.emailNewTask ?? true;
-    emailPayment.value = settings.emailPayment ?? true;
-    emailAddress.value = settings.emailAddress ?? "";
-    pushEnabled.value = settings.pushEnabled ?? false;
-    pushNewLead.value = settings.pushNewLead ?? true;
-    pushNewMessage.value = settings.pushNewMessage ?? true;
-    pushTaskDeadline.value = settings.pushTaskDeadline ?? true;
-    pushUrgentTask.value = settings.pushUrgentTask ?? true;
-  }
-};
-
-// Сохранение настроек
-const saveSettings = () => {
-  const settings = {
-    emailEnabled: emailEnabled.value,
-    emailDaily: emailDaily.value,
-    emailWeekly: emailWeekly.value,
-    emailNewLead: emailNewLead.value,
-    emailNewTask: emailNewTask.value,
-    emailPayment: emailPayment.value,
-    emailAddress: emailAddress.value,
-    pushEnabled: pushEnabled.value,
-    pushNewLead: pushNewLead.value,
-    pushNewMessage: pushNewMessage.value,
-    pushTaskDeadline: pushTaskDeadline.value,
-    pushUrgentTask: pushUrgentTask.value,
-    savedAt: new Date().toISOString(),
-  };
-
-  localStorage.setItem("crm_notification_settings", JSON.stringify(settings));
-  alert("Настройки сохранены!");
-};
-
-// Включить все уведомления
-const enableAll = () => {
-  emailEnabled.value = true;
-  emailDaily.value = true;
-  emailWeekly.value = true;
-  emailNewLead.value = true;
-  emailNewTask.value = true;
-  emailPayment.value = true;
-
-  pushEnabled.value = true;
-  pushNewLead.value = true;
-  pushNewMessage.value = true;
-  pushTaskDeadline.value = true;
-  pushUrgentTask.value = true;
-
-  if (!hasPushPermission.value) {
-    requestPushPermission();
-  }
-
-  alert("Все уведомления включены!");
-};
-
-// Отключить все уведомления
-const disableAll = () => {
-  emailEnabled.value = false;
-  pushEnabled.value = false;
-  alert("Все уведомления отключены!");
-};
-
-// Сброс настроек
-const resetSettings = () => {
-  if (confirm("Сбросить все настройки к значениям по умолчанию?")) {
-    emailEnabled.value = true;
-    emailDaily.value = true;
-    emailWeekly.value = true;
-    emailNewLead.value = true;
-    emailNewTask.value = true;
-    emailPayment.value = true;
-    emailAddress.value = "";
-
-    pushEnabled.value = false;
-    pushNewLead.value = true;
-    pushNewMessage.value = true;
-    pushTaskDeadline.value = true;
-    pushUrgentTask.value = true;
-
-    localStorage.removeItem("crm_notification_settings");
-    alert("Настройки сброшены к значениям по умолчанию!");
-  }
-};
-
-// Запрос разрешения на push
-const requestPushPermission = async () => {
-  if (!("Notification" in window)) {
-    alert("Ваш браузер не поддерживает push-уведомления");
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  hasPushPermission.value = permission === "granted";
-
-  if (hasPushPermission.value) {
-    alert("Разрешение на push-уведомления получено!");
-    pushEnabled.value = true;
-  } else {
-    alert(
-      "Разрешение на push-уведомления не получено. Проверьте настройки браузера."
-    );
-  }
-};
-</script>

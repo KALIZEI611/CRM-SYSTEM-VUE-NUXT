@@ -1,4 +1,4 @@
-// Типы для настроек уведомлений
+
 export interface NotificationSettings {
   $id?: string
   userId: string
@@ -18,7 +18,7 @@ export interface EmailSettings {
   taskReminder: boolean
   paymentReceived: boolean
   systemAlerts: boolean
-  customEmail?: string // Альтернативный email
+  customEmail?: string 
 }
 
 export interface PushSettings {
