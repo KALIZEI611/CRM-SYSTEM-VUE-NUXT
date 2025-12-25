@@ -24,14 +24,16 @@ const hasPushPermission: Ref<boolean> = ref(false);
 
 const isLoading: Ref<boolean> = ref(false);
 
-onMounted(async (): Promise<void> => {
-  hasPushPermission.value =
-    "Notification" in window && Notification.permission === "granted";
+onMounted(
+  async (): Promise<void> => {
+    hasPushPermission.value =
+      "Notification" in window && Notification.permission === "granted";
 
-  if (authStore.isAuth) {
-    await loadSettings();
+    if (authStore.isAuth) {
+      await loadSettings();
+    }
   }
-});
+);
 
 watch(
   [
@@ -178,9 +180,7 @@ const requestPushPermission = async (): Promise<void> => {
     alert("Разрешение на push-уведомления получено!");
     pushEnabled.value = true;
   } else {
-    alert(
-      "Разрешение на push-уведомления не получено. Проверьте настройки браузера."
-    );
+    alert("Разрешение на push-уведомления не получено. Проверьте настройки браузера.");
   }
 
   await saveSettings();
@@ -207,7 +207,7 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen p-4">
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-8xl mx-auto">
       <div class="mb-8 ml-6">
         <h1 class="text-2xl md:text-3xl font-bold mb-2">Настройки</h1>
         <p class="text-gray-500">Настройте систему уведомлений</p>
@@ -241,11 +241,7 @@ useSeoMeta({
 
           <div v-if="emailEnabled" class="space-y-3">
             <div class="flex items-center gap-3 p-3 border-b">
-              <input
-                type="checkbox"
-                v-model="emailDaily"
-                class="w-5 h-5 text-blue-600"
-              />
+              <input type="checkbox" v-model="emailDaily" class="w-5 h-5 text-blue-600" />
               <div>
                 <p class="font-medium">Ежедневный дайджест</p>
                 <p class="text-sm text-gray-500">Сводка за день в 18:00</p>
@@ -301,9 +297,7 @@ useSeoMeta({
             </div>
 
             <div class="mt-4">
-              <label class="block text-sm font-medium mb-2"
-                >Email для уведомлений</label
-              >
+              <label class="block text-sm font-medium mb-2">Email для уведомлений</label>
               <input
                 v-model="emailAddress"
                 type="email"
@@ -414,9 +408,7 @@ useSeoMeta({
           </div>
         </div>
 
-        <div
-          class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-300"
-        >
+        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-300">
           <button
             @click="saveSettings"
             class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
