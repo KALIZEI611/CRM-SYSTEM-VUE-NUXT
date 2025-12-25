@@ -80,11 +80,7 @@ const handleDrop = (targetColumn: IColumn) => {
               draggable="true"
               @dragstart="() => handleDragStart(card, column)"
             >
-              <ui-card-header
-                role="button"
-                class="color"
-                @click="store.set(card)"
-              >
+              <ui-card-header role="button" class="color" @click="store.set(card)">
                 <ui-card-title>{{ card.name }}</ui-card-title>
                 <ui-card-description>
                   {{ convertCurrency(card.price) }}
