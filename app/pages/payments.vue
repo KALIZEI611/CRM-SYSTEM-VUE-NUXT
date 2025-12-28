@@ -1,13 +1,358 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { DB, Query, ID, type Models } from '~/Util/appwrite'
+import { DB_ID, COLLECTION_DEALS, COLLECTION_CUSTOMERS } from '~/constants/app.constants'
+
+interface Customer extends Models.Document {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+}
+
+type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 'done';
+
+interface Deal extends Models.Document {
+  name: string;
+  price: number;
+  status: DealStatus;
+  customer: string;
+  description?: string;
+  paymentMethod?: string;
+  quantity?: number;
+  notes?: string;
+  customerName?: string;
+  customerEmail?: string;
+}
+
+interface PaymentWithCustomer extends Deal {
+  customer?: Customer;
+}
+
+
+interface StatusOption {
+  value: DealStatus;
+  label: string;
+  color: string;
+}
+
+const payments = ref<PaymentWithCustomer[]>([]);
+const loading = ref<boolean>(false);
+const selectedPayment = ref<PaymentWithCustomer | null>(null);
+const isOpenForm = ref<boolean>(false);
+const isPending = ref<boolean>(false);
+
+const name = ref<string>('');
+const price = ref<string>('');
+const customerName = ref<string>('');
+const customerEmail = ref<string>('');
+const description = ref<string>('');
+const status = ref<DealStatus>('todo');
+const paymentMethod = ref<string>('');
+const quantity = ref<number>(1);
+const notes = ref<string>('');
+
+const searchQuery = ref<string>('');
+const statusFilter = ref<string>('');
+const currentPage = ref<number>(1);
+const itemsPerPage = 10;
+
+const statusOptions: StatusOption[] = [
+  { value: 'todo', label: 'Новая', color: 'bg-gray-500/20 text-gray-500' },
+  { value: 'to-be-agreed', label: 'На согласовании', color: 'bg-blue-500/20 text-blue-500' },
+  { value: 'in-progress', label: 'В работе', color: 'bg-yellow-500/20 text-yellow-500' },
+  { value: 'produced', label: 'Произведено', color: 'bg-purple-500/20 text-purple-500' },
+  { value: 'done', label: 'Выполнено', color: 'bg-green-500/20 text-green-500' }
+];
+
+onMounted(() => {
+  fetchPayments();
+});
+
+const getStatusLabel = (statusValue: DealStatus): string => {
+  const option = statusOptions.find(opt => opt.value === statusValue);
+  return option ? option.label : statusValue;
+};
+
+const getStatusClass = (statusValue: DealStatus): string => {
+  const option = statusOptions.find(opt => opt.value === statusValue);
+  return option ? option.color : 'bg-gray-500/20 text-gray-500';
+};
+
+const fetchPayments = async (): Promise<void> => {
+  loading.value = true;
+  try {
+    const deals = await DB.listDocuments<Deal>(DB_ID, COLLECTION_DEALS, [
+      Query.orderDesc('$createdAt'),
+      Query.limit(100)
+    ]);
+
+    const paymentsWithCustomers = await Promise.all(
+      deals.documents.map(async (deal) => {
+        if (deal.customer) {
+          try {
+            const customer = await DB.getDocument<Customer>(DB_ID, COLLECTION_CUSTOMERS, deal.customer);
+            return { ...deal, customer };
+          } catch (error) {
+            console.warn('Клиент не найден:', error);
+            return deal as PaymentWithCustomer;
+          }
+        }
+        return deal as PaymentWithCustomer;
+      })
+    );
+
+    payments.value = paymentsWithCustomers;
+  } catch (error) {
+    console.error('Ошибка загрузки платежей:', error);
+    alert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const createDeal = async (): Promise<void> => {
+  isPending.value = true;
+  try {
+    if (!name.value || !price.value || !customerName.value || !customerEmail.value) {
+      alert('Заполните все обязательные поля (отмечены *)');
+      isPending.value = false;
+      return;
+    }
+    let customerId: string;
+    try {
+      const existingCustomers = await DB.listDocuments<Customer>(DB_ID, COLLECTION_CUSTOMERS, [
+        Query.equal('email', customerEmail.value),
+        Query.limit(1)
+      ]);
+
+      if (existingCustomers.documents.length > 0) {
+        customerId = existingCustomers.documents[0].$id;
+        console.log('Используем существующего клиента:', existingCustomers.documents[0].name);
+      } else {
+        const customerData: Partial<Customer> = {
+          name: customerName.value,
+          email: customerEmail.value,
+        };
+
+        const customer = await DB.createDocument<Customer>(
+          DB_ID,
+          COLLECTION_CUSTOMERS,
+          ID.unique(),
+          customerData as Customer
+        );
+        customerId = customer.$id;
+        console.log('Создан новый клиент:', customer.name);
+      }
+    } catch (error) {
+      console.error('Ошибка при работе с клиентом:', error);
+      alert('Ошибка при обработке клиента. Попробуйте еще раз.');
+      isPending.value = false;
+      return;
+    }
+
+    const dealData: Partial<Deal> = {
+      name: name.value,
+      price: parseFloat(price.value),
+      status: status.value,
+      customer: customerId,
+      ...(description.value && { description: description.value }),
+      ...(paymentMethod.value && { paymentMethod: paymentMethod.value }),
+      ...(notes.value && { notes: notes.value }),
+      quantity: quantity.value || 1,
+    };
+
+    await DB.createDocument<Deal>(
+      DB_ID,
+      COLLECTION_DEALS,
+      ID.unique(),
+      dealData as Deal
+    );
+
+    resetForm();
+    await fetchPayments();
+    isOpenForm.value = false;
+
+    alert('Сделка успешно создана!');
+  } catch (error: any) {
+    console.error('Ошибка создания сделки:', error);
+
+    if (error.message.includes('Unknown attribute')) {
+      const attribute = error.message.match(/"([^"]+)"/)?.[1];
+      alert(`Ошибка: поле "${attribute}" не существует в коллекции. Добавьте его через Appwrite консоль или уберите из формы.`);
+    } else if (error.message.includes('Invalid document structure')) {
+      alert(`Ошибка: некорректная структура данных. Проверьте, что все поля соответствуют структуре коллекции в Appwrite.`);
+    } else {
+      alert(`Ошибка создания сделки: ${error.message}`);
+    }
+  } finally {
+    isPending.value = false;
+  }
+};
+
+const checkCollectionsStructure = async (): Promise<void> => {
+  try {
+    console.log('Проверка структуры коллекций...');
+
+    const customersAttrs = await DB.listAttributes(DB_ID, COLLECTION_CUSTOMERS);
+    console.log('Поля коллекции customers:', customersAttrs.attributes.map((a: any) => a.key));
+
+    const dealsAttrs = await DB.listAttributes(DB_ID, COLLECTION_DEALS);
+    console.log('Поля коллекции deals:', dealsAttrs.attributes.map((a: any) => a.key));
+
+    const statusAttr = dealsAttrs.attributes.find((a: any) => a.key === 'status');
+    if (statusAttr && statusAttr.format) {
+      console.log('Допустимые значения для status:', statusAttr.format);
+    }
+  } catch (error) {
+    console.error('Ошибка проверки структуры:', error);
+  }
+};
+
+const resetForm = (): void => {
+  name.value = '';
+  price.value = '';
+  customerName.value = '';
+  customerEmail.value = '';
+  description.value = '';
+  status.value = 'todo';
+  paymentMethod.value = '';
+  quantity.value = 1;
+  notes.value = '';
+};
+
+const onSubmit = async (e: Event): Promise<void> => {
+  e.preventDefault();
+
+  if (!name.value.trim()) {
+    alert('Введите название сделки');
+    return;
+  }
+
+  const priceNum = parseFloat(price.value);
+  if (!price.value || isNaN(priceNum) || priceNum <= 0) {
+    alert('Введите корректную цену');
+    return;
+  }
+
+  if (!customerName.value.trim()) {
+    alert('Введите имя клиента');
+    return;
+  }
+
+  if (!customerEmail.value.trim()) {
+    alert('Введите email клиента');
+    return;
+  }
+
+  await createDeal();
+};
+
+const filteredPayments = computed((): PaymentWithCustomer[] => {
+  let filtered = payments.value;
+
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter((p: PaymentWithCustomer) => {
+      const searchableFields = [
+        p.name,
+        p.customer?.name,
+        p.customer?.email,
+        p.customerName,
+        p.customerEmail,
+        p.description,
+        p.paymentMethod
+      ];
+      return searchableFields.some(field =>
+        field && typeof field === 'string' && field.toLowerCase().includes(query)
+      );
+    });
+  }
+
+  if (statusFilter.value) {
+    filtered = filtered.filter((p: PaymentWithCustomer) => p.status === statusFilter.value);
+  }
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filtered.slice(start, end);
+});
+const totalPayments = computed((): number => payments.value.length);
+const completedPayments = computed((): number => payments.value.filter(p => p.status === 'done').length);
+const pendingPayments = computed((): number => payments.value.filter(p => p.status === 'in-progress').length);
+const totalAmount = computed((): number => payments.value.reduce((sum, p) => sum + (p.price || 0), 0));
+
+const formatDate = (dateString: string): string => {
+  if (!dateString) return 'Нет данных';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+const formatTime = (dateString: string): string => {
+  if (!dateString) return 'Нет данных';
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const togglePaymentStatus = async (payment: PaymentWithCustomer): Promise<void> => {
+  try {
+    const statusIndex = statusOptions.findIndex(opt => opt.value === payment.status);
+    const nextStatusIndex = (statusIndex + 1) % statusOptions.length;
+    const newStatus: DealStatus = statusOptions[nextStatusIndex].value;
+
+    await DB.updateDocument<Deal>(DB_ID, COLLECTION_DEALS, payment.$id, {
+      status: newStatus
+    } as Partial<Deal>);
+
+    payment.status = newStatus;
+
+    alert(`Статус сделки #${payment.$id.slice(-6)} изменен на "${getStatusLabel(newStatus)}"`);
+
+    fetchPayments();
+  } catch (error: any) {
+    console.error('Ошибка обновления статуса:', error);
+    alert(`Ошибка обновления статуса: ${error.message}`);
+  }
+};
+
+const openPaymentDetails = (payment: PaymentWithCustomer): void => {
+  selectedPayment.value = payment;
+};
+
+const nextPage = (): void => {
+  if (currentPage.value * itemsPerPage < payments.value.length) {
+    currentPage.value++;
+  }
+};
+
+const previousPage = (): void => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+onMounted(async (): Promise<void> => {
+  await fetchPayments();
+});
+
+useSeoMeta({
+  title: "Платежи",
+});
+</script>
+
 <template>
   <div class="min-h-screen bg-background text-foreground p-4">
-    <div class="max-w-7xl mx-auto">
-      <!-- Заголовок -->
+    <div class="max-w-8xl mx-auto">
       <div class="mb-8">
         <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Платежи</h1>
         <p class="text-muted-foreground">Управление платежами и сделками</p>
       </div>
-
-      <!-- Фильтры и статистика -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-card border border-border rounded-xl p-4">
           <p class="text-sm text-muted-foreground mb-1">Всего сделок</p>
@@ -32,7 +377,6 @@
         </div>
       </div>
 
-      <!-- Фильтры -->
       <div class="flex flex-col md:flex-row gap-4 mb-6">
         <div class="flex-1">
           <input
@@ -65,7 +409,6 @@
         </div>
       </div>
 
-      <!-- Кнопка добавления новой сделки -->
       <div class="mb-6">
         <button
           @click="isOpenForm = true"
@@ -83,9 +426,7 @@
         </button>
       </div>
 
-      <!-- Таблица платежей -->
       <div class="bg-card rounded-xl border border-border overflow-hidden">
-        <!-- Загрузка -->
         <div v-if="loading" class="p-8 text-center">
           <div
             class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-4"
@@ -93,14 +434,12 @@
           <p class="text-muted-foreground">Загрузка платежей...</p>
         </div>
 
-        <!-- Пустое состояние -->
         <div v-else-if="payments.length === 0" class="p-8 text-center">
           <div class="text-4xl mb-4">💰</div>
           <p class="text-xl font-semibold text-white mb-2">Платежей пока нет</p>
           <p class="text-muted-foreground">Начните добавлять сделки и платежи</p>
         </div>
 
-        <!-- Таблица -->
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -257,7 +596,6 @@
           </table>
         </div>
 
-        <!-- Пагинация -->
         <div
           v-if="payments.length > 0"
           class="flex items-center justify-between p-4 border-t border-input"
@@ -286,7 +624,6 @@
       </div>
     </div>
 
-    <!-- Модальное окно деталей платежа -->
     <div
       v-if="selectedPayment"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -310,7 +647,6 @@
         </div>
 
         <div class="space-y-6">
-          <!-- Основная информация -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p class="text-sm text-muted-foreground mb-1">ID сделки</p>
@@ -329,7 +665,6 @@
             </div>
           </div>
 
-          <!-- Информация о клиенте -->
           <div>
             <h4 class="font-semibold text-white mb-3">Информация о клиенте</h4>
             <div class="bg-muted/30 border border-input rounded-lg p-4">
@@ -370,7 +705,6 @@
             </div>
           </div>
 
-          <!-- Информация о сделке -->
           <div>
             <h4 class="font-semibold text-white mb-3">Информация о сделке</h4>
             <div class="bg-muted/30 border border-input rounded-lg p-4">
@@ -407,7 +741,6 @@
             </div>
           </div>
 
-          <!-- Дополнительная информация -->
           <div>
             <h4 class="font-semibold text-white mb-3">Дополнительная информация</h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -432,7 +765,6 @@
             </div>
           </div>
 
-          <!-- Действия -->
           <div class="flex gap-3 pt-4 border-t border-input">
             <button
               @click="togglePaymentStatus(selectedPayment)"
@@ -451,7 +783,6 @@
       </div>
     </div>
 
-    <!-- Модальное окно добавления сделки -->
     <div
       v-if="isOpenForm"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -607,392 +938,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { DB, Query, ID, type Models } from '~/Util/appwrite'
-import { DB_ID, COLLECTION_DEALS, COLLECTION_CUSTOMERS } from '~/constants/app.constants'
-
-// Типы
-interface Customer extends Models.Document {
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-}
-
-// Используем допустимые статусы из Appwrite
-type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 'done';
-
-interface Deal extends Models.Document {
-  name: string;
-  price: number;
-  status: DealStatus;
-  customer: string;
-  description?: string;
-  paymentMethod?: string;
-  quantity?: number;
-  notes?: string;
-  customerName?: string;
-  customerEmail?: string;
-}
-
-interface PaymentWithCustomer extends Deal {
-  customer?: Customer;
-}
-
-// Маппинг статусов для пользовательского интерфейса
-interface StatusOption {
-  value: DealStatus;
-  label: string;
-  color: string;
-}
-
-// Реактивные переменные
-const payments = ref<PaymentWithCustomer[]>([]);
-const loading = ref<boolean>(false);
-const selectedPayment = ref<PaymentWithCustomer | null>(null);
-const isOpenForm = ref<boolean>(false);
-const isPending = ref<boolean>(false);
-
-// Поля формы
-const name = ref<string>('');
-const price = ref<string>('');
-const customerName = ref<string>('');
-const customerEmail = ref<string>('');
-const description = ref<string>('');
-// Используем первое допустимое значение по умолчанию
-const status = ref<DealStatus>('todo');
-const paymentMethod = ref<string>('');
-const quantity = ref<number>(1);
-const notes = ref<string>('');
-
-// Фильтры и поиск
-const searchQuery = ref<string>('');
-const statusFilter = ref<string>('');
-const currentPage = ref<number>(1);
-const itemsPerPage = 10;
-
-// Маппинг статусов для пользовательского интерфейса
-const statusOptions: StatusOption[] = [
-  { value: 'todo', label: 'Новая', color: 'bg-gray-500/20 text-gray-500' },
-  { value: 'to-be-agreed', label: 'На согласовании', color: 'bg-blue-500/20 text-blue-500' },
-  { value: 'in-progress', label: 'В работе', color: 'bg-yellow-500/20 text-yellow-500' },
-  { value: 'produced', label: 'Произведено', color: 'bg-purple-500/20 text-purple-500' },
-  { value: 'done', label: 'Выполнено', color: 'bg-green-500/20 text-green-500' }
-];
-
-// Инициализация данных
-onMounted(() => {
-  fetchPayments();
-});
-
-// Получить отображаемое название статуса
-const getStatusLabel = (statusValue: DealStatus): string => {
-  const option = statusOptions.find(opt => opt.value === statusValue);
-  return option ? option.label : statusValue;
-};
-
-// Получить класс для статуса
-const getStatusClass = (statusValue: DealStatus): string => {
-  const option = statusOptions.find(opt => opt.value === statusValue);
-  return option ? option.color : 'bg-gray-500/20 text-gray-500';
-};
-
-// Загрузка платежей из Appwrite
-const fetchPayments = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    const deals = await DB.listDocuments<Deal>(DB_ID, COLLECTION_DEALS, [
-      Query.orderDesc('$createdAt'),
-      Query.limit(100)
-    ]);
-
-    // Загружаем информацию о клиентах для каждой сделки
-    const paymentsWithCustomers = await Promise.all(
-      deals.documents.map(async (deal) => {
-        if (deal.customer) {
-          try {
-            const customer = await DB.getDocument<Customer>(DB_ID, COLLECTION_CUSTOMERS, deal.customer);
-            return { ...deal, customer };
-          } catch (error) {
-            console.warn('Клиент не найден:', error);
-            return deal as PaymentWithCustomer;
-          }
-        }
-        return deal as PaymentWithCustomer;
-      })
-    );
-
-    payments.value = paymentsWithCustomers;
-  } catch (error) {
-    console.error('Ошибка загрузки платежей:', error);
-    alert('Ошибка загрузки данных. Проверьте подключение к интернету.');
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Создание новой сделки
-const createDeal = async (): Promise<void> => {
-  isPending.value = true;
-  try {
-    // Проверяем обязательные поля
-    if (!name.value || !price.value || !customerName.value || !customerEmail.value) {
-      alert('Заполните все обязательные поля (отмечены *)');
-      isPending.value = false;
-      return;
-    }
-
-    // Проверяем, существует ли клиент с таким email
-    let customerId: string;
-    try {
-      const existingCustomers = await DB.listDocuments<Customer>(DB_ID, COLLECTION_CUSTOMERS, [
-        Query.equal('email', customerEmail.value),
-        Query.limit(1)
-      ]);
-
-      if (existingCustomers.documents.length > 0) {
-        // Используем существующего клиента
-        customerId = existingCustomers.documents[0].$id;
-        console.log('Используем существующего клиента:', existingCustomers.documents[0].name);
-      } else {
-        // Создаем нового клиента
-        const customerData: Partial<Customer> = {
-          name: customerName.value,
-          email: customerEmail.value,
-        };
-
-        const customer = await DB.createDocument<Customer>(
-          DB_ID,
-          COLLECTION_CUSTOMERS,
-          ID.unique(),
-          customerData as Customer
-        );
-        customerId = customer.$id;
-        console.log('Создан новый клиент:', customer.name);
-      }
-    } catch (error) {
-      console.error('Ошибка при работе с клиентом:', error);
-      alert('Ошибка при обработке клиента. Попробуйте еще раз.');
-      isPending.value = false;
-      return;
-    }
-
-    // Создаем объект сделки только с разрешенными полями
-    const dealData: Partial<Deal> = {
-      name: name.value,
-      price: parseFloat(price.value),
-      status: status.value,
-      customer: customerId,
-      ...(description.value && { description: description.value }),
-      ...(paymentMethod.value && { paymentMethod: paymentMethod.value }),
-      ...(notes.value && { notes: notes.value }),
-      quantity: quantity.value || 1,
-    };
-
-    // Создаем сделку
-    await DB.createDocument<Deal>(
-      DB_ID,
-      COLLECTION_DEALS,
-      ID.unique(),
-      dealData as Deal
-    );
-
-    // Очищаем форму и обновляем список
-    resetForm();
-    await fetchPayments();
-    isOpenForm.value = false;
-
-    alert('Сделка успешно создана!');
-  } catch (error: any) {
-    console.error('Ошибка создания сделки:', error);
-
-    if (error.message.includes('Unknown attribute')) {
-      const attribute = error.message.match(/"([^"]+)"/)?.[1];
-      alert(`Ошибка: поле "${attribute}" не существует в коллекции. Добавьте его через Appwrite консоль или уберите из формы.`);
-    } else if (error.message.includes('Invalid document structure')) {
-      alert(`Ошибка: некорректная структура данных. Проверьте, что все поля соответствуют структуре коллекции в Appwrite.`);
-    } else {
-      alert(`Ошибка создания сделки: ${error.message}`);
-    }
-  } finally {
-    isPending.value = false;
-  }
-};
-
-// Проверить структуру коллекций
-const checkCollectionsStructure = async (): Promise<void> => {
-  try {
-    console.log('Проверка структуры коллекций...');
-
-    // Получаем информацию о коллекциях
-    const customersAttrs = await DB.listAttributes(DB_ID, COLLECTION_CUSTOMERS);
-    console.log('Поля коллекции customers:', customersAttrs.attributes.map((a: any) => a.key));
-
-    const dealsAttrs = await DB.listAttributes(DB_ID, COLLECTION_DEALS);
-    console.log('Поля коллекции deals:', dealsAttrs.attributes.map((a: any) => a.key));
-
-    // Проверяем enum для поля status в deals
-    const statusAttr = dealsAttrs.attributes.find((a: any) => a.key === 'status');
-    if (statusAttr && statusAttr.format) {
-      console.log('Допустимые значения для status:', statusAttr.format);
-    }
-  } catch (error) {
-    console.error('Ошибка проверки структуры:', error);
-  }
-};
-
-// Очистка формы
-const resetForm = (): void => {
-  name.value = '';
-  price.value = '';
-  customerName.value = '';
-  customerEmail.value = '';
-  description.value = '';
-  status.value = 'todo';
-  paymentMethod.value = '';
-  quantity.value = 1;
-  notes.value = '';
-};
-
-// Обработчик отправки формы
-const onSubmit = async (e: Event): Promise<void> => {
-  e.preventDefault();
-
-  // Проверяем обязательные поля
-  if (!name.value.trim()) {
-    alert('Введите название сделки');
-    return;
-  }
-
-  const priceNum = parseFloat(price.value);
-  if (!price.value || isNaN(priceNum) || priceNum <= 0) {
-    alert('Введите корректную цену');
-    return;
-  }
-
-  if (!customerName.value.trim()) {
-    alert('Введите имя клиента');
-    return;
-  }
-
-  if (!customerEmail.value.trim()) {
-    alert('Введите email клиента');
-    return;
-  }
-
-  await createDeal();
-};
-
-// Фильтрация платежей
-const filteredPayments = computed((): PaymentWithCustomer[] => {
-  let filtered = payments.value;
-
-  // Поиск по названию, клиенту или email
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase();
-    filtered = filtered.filter((p: PaymentWithCustomer) => {
-      const searchableFields = [
-        p.name,
-        p.customer?.name,
-        p.customer?.email,
-        p.customerName,
-        p.customerEmail,
-        p.description,
-        p.paymentMethod
-      ];
-      return searchableFields.some(field =>
-        field && typeof field === 'string' && field.toLowerCase().includes(query)
-      );
-    });
-  }
-
-  // Фильтр по статусу
-  if (statusFilter.value) {
-    filtered = filtered.filter((p: PaymentWithCustomer) => p.status === statusFilter.value);
-  }
-
-  // Пагинация
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filtered.slice(start, end);
-});
-
-// Статистика
-const totalPayments = computed((): number => payments.value.length);
-const completedPayments = computed((): number => payments.value.filter(p => p.status === 'done').length);
-const pendingPayments = computed((): number => payments.value.filter(p => p.status === 'in-progress').length);
-const totalAmount = computed((): number => payments.value.reduce((sum, p) => sum + (p.price || 0), 0));
-
-// Форматирование даты
-const formatDate = (dateString: string): string => {
-  if (!dateString) return 'Нет данных';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
-
-const formatTime = (dateString: string): string => {
-  if (!dateString) return 'Нет данных';
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-// Управление статусом сделки
-const togglePaymentStatus = async (payment: PaymentWithCustomer): Promise<void> => {
-  try {
-    // Определяем следующий статус (циклически)
-    const statusIndex = statusOptions.findIndex(opt => opt.value === payment.status);
-    const nextStatusIndex = (statusIndex + 1) % statusOptions.length;
-    const newStatus: DealStatus = statusOptions[nextStatusIndex].value;
-
-    await DB.updateDocument<Deal>(DB_ID, COLLECTION_DEALS, payment.$id, {
-      status: newStatus
-    } as Partial<Deal>);
-
-    // Обновляем локальные данные
-    payment.status = newStatus;
-
-    alert(`Статус сделки #${payment.$id.slice(-6)} изменен на "${getStatusLabel(newStatus)}"`);
-
-    fetchPayments(); // Обновляем статистику
-  } catch (error: any) {
-    console.error('Ошибка обновления статуса:', error);
-    alert(`Ошибка обновления статуса: ${error.message}`);
-  }
-};
-
-// Детали платежа
-const openPaymentDetails = (payment: PaymentWithCustomer): void => {
-  selectedPayment.value = payment;
-};
-
-// Пагинация
-const nextPage = (): void => {
-  if (currentPage.value * itemsPerPage < payments.value.length) {
-    currentPage.value++;
-  }
-};
-
-const previousPage = (): void => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
-
-// Дополнительно: проверяем структуру при загрузке
-onMounted(async (): Promise<void> => {
-  await fetchPayments();
-  // await checkCollectionsStructure(); // Раскомментируйте для отладки
-});
-</script>
 
 <style scoped>
 .animate-spin {

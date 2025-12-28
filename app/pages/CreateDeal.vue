@@ -65,25 +65,6 @@ const onSubmit = handleSubmit((values) => mutate(values));
 </script>
 
 <template>
-  <div class="text-center mb-2">
-    <button
-      @click="isOpenForm = !isOpenForm"
-      class="transition-all opacity-5 hover:opacity-100 hover:text-[#a252c8]"
-    >
-      <Icon
-        v-if="isOpenForm"
-        name="radix-icons:arrow-up"
-        class="fade-in-100 fade-out-0"
-        size="30"
-      />
-      <Icon
-        v-else
-        name="radix-icons:plus-circled"
-        class="fade-in-100 fade-out-0"
-        size="30"
-      />
-    </button>
-  </div>
   <form v-if="isOpenForm" @submit="onSubmit" class="form">
     <ui-input
       placeholder="Наименование сделки"

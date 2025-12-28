@@ -4,17 +4,17 @@ import type { IColumn } from "./kanban.types";
 export const KANBAN_DATA: IColumn[] = [
   {
     id: EnumStatus.todo,
-    name: "Входящие",
+    name: "Новые",
     items: [],
   },
   {
     id: EnumStatus["to-be-agreed"],
-    name: "Cогласование",
+    name: "На согласование",
     items: [],
   },
   {
     id: EnumStatus["in-progress"],
-    name: "В производстве",
+    name: "В работе",
     items: [],
   },
   {
@@ -24,7 +24,7 @@ export const KANBAN_DATA: IColumn[] = [
   },
   {
     id: EnumStatus.done,
-    name: "К отгрузке",
+    name: "Выполнено",
     items: [],
   },
 ];
