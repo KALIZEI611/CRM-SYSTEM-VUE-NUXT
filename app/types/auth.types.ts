@@ -29,4 +29,4 @@ export interface AuthResponse {
   message?: string;
   user?: User;
   errors?: ValidationError;
-}
+} 
