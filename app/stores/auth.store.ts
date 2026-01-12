@@ -12,19 +12,26 @@ const defaultValue: { user: iAuthStore } = {
   },
 };
 
-export const useAuthStore = defineStore("auth", {
-  state: () => defaultValue,
-  getters: {
-    isAuth: (state) => state.user.status,
-  },
-  actions: {
-    clear() {
-      this.$patch(defaultValue);
-    },
-    set(input: iAuthStore) {
-      this.$patch({ user: input });
-    },
-  },
+export const useAuthStore = defineStore("auth", () => {
+  const isAuth = ref(false);
+  const user = ref(null);
+  const authChecked = ref(false); 
+
+  function set(userData: any) {
+    user.value = userData;
+    isAuth.value = !!userData;
+  }
+
+  function clear() {
+    user.value = null;
+    isAuth.value = false;
+  }
+
+  function setAuthChecked(value: boolean) {
+    authChecked.value = value;
+  }
+
+  return { isAuth, user, authChecked, set, clear, setAuthChecked };
 });
 
 export const useIsLoadingStore = defineStore("isLoading", {

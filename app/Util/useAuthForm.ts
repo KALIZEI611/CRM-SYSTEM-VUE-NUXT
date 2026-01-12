@@ -3,10 +3,8 @@ import type { ValidationError, LoginForm, RegisterForm } from '~/types/auth.type
 import { AuthValidator } from '~/Util/validators';
 
 export function useAuthForm() {
-  // Режим формы (логин/регистрация)
   const isLoginMode = ref(true);
 
-  // Данные форм
   const loginForm = reactive<LoginForm>({
     email: '',
     password: ''
@@ -19,7 +17,6 @@ export function useAuthForm() {
     confirmPassword: ''
   });
 
-  // Ошибки валидации
   const errors = reactive<{
     login: ValidationError;
     register: ValidationError;
@@ -28,7 +25,6 @@ export function useAuthForm() {
     register: {}
   });
 
-  // Компьютеды для проверки валидности
   const isLoginFormValid = computed(() => {
     return !AuthValidator.hasErrors(AuthValidator.validateLoginForm(loginForm));
   });
@@ -37,7 +33,6 @@ export function useAuthForm() {
     return !AuthValidator.hasErrors(AuthValidator.validateRegisterForm(registerForm));
   });
 
-  // Очистка ошибок
   const clearErrors = (formType: 'login' | 'register') => {
     if (formType === 'login') {
       errors.login = {};
@@ -46,7 +41,6 @@ export function useAuthForm() {
     }
   };
 
-  // Очистка форм
   const clearForm = (formType: 'login' | 'register') => {
     if (formType === 'login') {
       Object.assign(loginForm, {
@@ -64,13 +58,11 @@ export function useAuthForm() {
     clearErrors(formType);
   };
 
-  // Переключение режима
   const toggleMode = () => {
     isLoginMode.value = !isLoginMode.value;
     clearErrors(isLoginMode.value ? 'login' : 'register');
   };
 
-  // Установка ошибок
   const setErrors = (formType: 'login' | 'register', newErrors: ValidationError) => {
     if (formType === 'login') {
       errors.login = { ...errors.login, ...newErrors };
