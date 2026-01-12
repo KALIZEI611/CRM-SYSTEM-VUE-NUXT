@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import type { ICard, IColumn } from "~/components/kanban/kanban.types";
 import { useSeoMeta } from "nuxt/app";
 import { useKanbarQuery } from "~/components/kanban/useKanbanQuery";
 import { convertCurrency } from "@/Util/convertCurrency";
 import dayjs from "dayjs";
 import CreateDeal from "./CreateDeal.vue";
-import type { EnumStatus } from "~/types/dealt.types";
 import { generateColumnStyle } from "~/components/kanban/generate-gradient";
 import { useDealSlideStore } from "~/stores/deal-slide.store";
 
@@ -23,8 +20,12 @@ const store = useDealSlideStore();
     <h1 class="font-bold text-2xl mb-10">СРМ система Михея</h1>
     <div v-if="isLoading">Загрузка...</div>
     <div v-else>
-      <div class="grid grid-cols-5 gap-16">
-        <div v-for="(column, index) in data" :key="column.id" class="min-h-screen">
+      <div class="grid grid-cols-5 gap-8">
+        <div
+          v-for="(column, index) in data"
+          :key="column.id"
+          class="min-h-screen"
+        >
           <div
             class="rounded bg-slate-700 py-1 px-5 mb-2 text-center"
             :style="generateColumnStyle(index, data?.length)"
@@ -39,7 +40,11 @@ const store = useDealSlideStore();
               class="mb-5"
               draggable="true"
             >
-              <ui-card-header role="button" class="color" @click="store.set(card)">
+              <ui-card-header
+                role="button"
+                class="color"
+                @click="store.set(card)"
+              >
                 <ui-card-title>{{ card.name }}</ui-card-title>
                 <ui-card-description>
                   {{ convertCurrency(card.price) }}

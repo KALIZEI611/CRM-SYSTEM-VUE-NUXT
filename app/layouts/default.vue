@@ -2,20 +2,45 @@
 import { account } from "~/Util/appwrite";
 import { useRouter } from "vue-router";
 import { useIsLoadingStore, useAuthStore } from "~/stores/auth.store";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 
 const isLoadingStore = useIsLoadingStore();
 const store = useAuthStore();
 const router = useRouter();
+const authCheckCompleted = ref(false); 
+
+const publicRoutes = ["/login", "/register"];
 
 onMounted(async () => {
+  if (authCheckCompleted.value || store.authChecked) {
+    isLoadingStore.set(false);
+    return;
+  }
+
+  const currentPath = router.currentRoute.value.path;
+
+  if (publicRoutes.includes(currentPath)) {
+    isLoadingStore.set(false);
+    store.setAuthChecked(true);
+    return;
+  }
+
   try {
     const user = await account.get();
-    if (user) store.set(user);
-  } catch (e) {
-    router.push("/login");
+    if (user) {
+      store.set(user);
+    }
+    store.setAuthChecked(true);
+  } catch (error: any) {
+    store.setAuthChecked(true);
+
+    // Только 401 и не на публичной странице
+    if (error.code === 401 && !publicRoutes.includes(currentPath)) {
+      await router.push("/login");
+    }
   } finally {
     isLoadingStore.set(false);
+    authCheckCompleted.value = true;
   }
 });
 </script>

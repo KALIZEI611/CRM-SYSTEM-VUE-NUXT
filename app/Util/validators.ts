@@ -2,22 +2,18 @@ import { EMAIL_REGEX, PASSWORD_MIN_LENGTH, NAME_MIN_LENGTH } from '~/constants/a
 import type { ValidationError, LoginForm, RegisterForm } from '~/types/auth.types';
 
 export class AuthValidator {
-  // Валидация email
   static validateEmail(email: string): boolean {
     return EMAIL_REGEX.test(email.trim());
   }
 
-  // Валидация пароля
   static validatePassword(password: string): boolean {
     return password.length >= PASSWORD_MIN_LENGTH;
   }
 
-  // Валидация имени
   static validateName(name: string): boolean {
     return name.trim().length >= NAME_MIN_LENGTH;
   }
 
-  // Полная валидация формы входа
   static validateLoginForm(form: LoginForm): ValidationError {
     const errors: ValidationError = {};
 
@@ -36,7 +32,6 @@ export class AuthValidator {
     return errors;
   }
 
-  // Полная валидация формы регистрации
   static validateRegisterForm(form: RegisterForm): ValidationError {
     const errors: ValidationError = {};
 
@@ -67,7 +62,6 @@ export class AuthValidator {
     return errors;
   }
 
-  // Проверка, есть ли ошибки
   static hasErrors(errors: ValidationError): boolean {
     return Object.keys(errors).length > 0;
   }
