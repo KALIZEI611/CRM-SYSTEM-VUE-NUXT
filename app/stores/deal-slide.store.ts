@@ -1,3 +1,4 @@
+import { defineStore } from "pinia";
 import type { ICard } from "~/components/kanban/kanban.types";
 
 const defaultValue: { card: ICard | null; isOpen: boolean } = {

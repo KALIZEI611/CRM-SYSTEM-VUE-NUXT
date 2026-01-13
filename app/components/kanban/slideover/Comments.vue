@@ -7,8 +7,6 @@ import dayjs from "dayjs";
 const store = useDealSlideStore();
 const { data, refetch, isLoading } = useComments();
 const { commentRef, writeComment } = useCreateComment({ refetch });
-
-console.log("Comments data:", data);
 </script>
 
 <template>
