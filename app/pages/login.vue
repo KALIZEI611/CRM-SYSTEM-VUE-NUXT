@@ -166,7 +166,7 @@ const handleToggleMode = () => {
             <button
               @click="handleToggleMode"
               :class="[
-                'flex-1 py-3 font-medium text-lg transition-colors',
+                'flex-1 py-3 font-medium text-lg transition-colors cursor-pointer',
                 isLoginMode
                   ? 'text-blue-400 border-b-2 border-blue-400'
                   : 'text-gray-400 hover:text-gray-300',
@@ -178,7 +178,7 @@ const handleToggleMode = () => {
             <button
               @click="handleToggleMode"
               :class="[
-                'flex-1 py-3 font-medium text-lg transition-colors',
+                'flex-1 py-3 font-medium text-lg transition-colors cursor-pointer',
                 !isLoginMode
                   ? 'text-blue-400 border-b-2 border-blue-400'
                   : 'text-gray-400 hover:text-gray-300',
@@ -242,8 +242,8 @@ const handleToggleMode = () => {
               </p>
             </div>
             <UiButton
-              type="submit"
-              class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit "
+              class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               :disabled="isLoadingStore.isLoading"
             >
               <template v-if="isLoadingStore.isLoading">
@@ -281,7 +281,7 @@ const handleToggleMode = () => {
               <UiButton
                 type="button"
                 variant="outline"
-                class="flex-1 text-sm border-gray-600 text-gray-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex-1 text-sm border-gray-600 text-gray-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 @click="() => useDemoAccount('admin')"
                 :disabled="isLoadingStore.isLoading"
               >
@@ -290,7 +290,7 @@ const handleToggleMode = () => {
               <UiButton
                 type="button"
                 variant="outline"
-                class="flex-1 text-sm border-gray-600 text-gray-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex-1 text-sm border-gray-600 text-gray-300 hover:border-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 @click="() => useDemoAccount('user')"
                 :disabled="isLoadingStore.isLoading"
               >
@@ -422,7 +422,7 @@ const handleToggleMode = () => {
 
             <UiButton
               type="submit"
-              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               :disabled="isLoadingStore.isLoading"
             >
               <template v-if="isLoadingStore.isLoading">
@@ -460,7 +460,7 @@ const handleToggleMode = () => {
             {{ isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?" }}
             <button
               @click="handleToggleMode"
-              class="ml-1 text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              class="ml-1 text-blue-400 hover:text-blue-300 font-medium transition-colors cursor-pointer"
               :disabled="isLoadingStore.isLoading"
             >
               {{ isLoginMode ? "Зарегистрируйтесь" : "Войдите" }}

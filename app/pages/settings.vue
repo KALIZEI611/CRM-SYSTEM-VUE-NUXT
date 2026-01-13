@@ -24,16 +24,14 @@ const hasPushPermission: Ref<boolean> = ref(false);
 
 const isLoading: Ref<boolean> = ref(false);
 
-onMounted(
-  async (): Promise<void> => {
-    hasPushPermission.value =
-      "Notification" in window && Notification.permission === "granted";
+onMounted(async (): Promise<void> => {
+  hasPushPermission.value =
+    "Notification" in window && Notification.permission === "granted";
 
-    if (authStore.isAuth) {
-      await loadSettings();
-    }
+  if (authStore.isAuth) {
+    await loadSettings();
   }
-);
+});
 
 watch(
   [
@@ -180,7 +178,9 @@ const requestPushPermission = async (): Promise<void> => {
     alert("Разрешение на push-уведомления получено!");
     pushEnabled.value = true;
   } else {
-    alert("Разрешение на push-уведомления не получено. Проверьте настройки браузера.");
+    alert(
+      "Разрешение на push-уведомления не получено. Проверьте настройки браузера."
+    );
   }
 
   await saveSettings();
@@ -241,7 +241,11 @@ useSeoMeta({
 
           <div v-if="emailEnabled" class="space-y-3">
             <div class="flex items-center gap-3 p-3 border-b">
-              <input type="checkbox" v-model="emailDaily" class="w-5 h-5 text-blue-600" />
+              <input
+                type="checkbox"
+                v-model="emailDaily"
+                class="w-5 h-5 text-blue-600"
+              />
               <div>
                 <p class="font-medium">Ежедневный дайджест</p>
                 <p class="text-sm text-gray-500">Сводка за день в 18:00</p>
@@ -297,7 +301,9 @@ useSeoMeta({
             </div>
 
             <div class="mt-4">
-              <label class="block text-sm font-medium mb-2">Email для уведомлений</label>
+              <label class="block text-sm font-medium mb-2"
+                >Email для уведомлений</label
+              >
               <input
                 v-model="emailAddress"
                 type="email"
@@ -408,28 +414,30 @@ useSeoMeta({
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-300">
+        <div
+          class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-300"
+        >
           <button
             @click="saveSettings"
-            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
           >
             Сохранить настройки
           </button>
           <button
             @click="enableAll"
-            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors"
+            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors cursor-pointer"
           >
             Включить все
           </button>
           <button
             @click="disableAll"
-            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors"
+            class="px-6 py-3 border border-gray-500 rounded-lg hover:bg-primary transition-colors cursor-pointer"
           >
             Отключить все
           </button>
           <button
             @click="resetSettings"
-            class="px-6 py-3 border border-red-800 text-white rounded-lg hover:bg-red-800 transition-colors"
+            class="px-6 py-3 border border-red-800 text-white rounded-lg hover:bg-red-800 transition-colors cursor-pointer"
           >
             Сбросить
           </button>

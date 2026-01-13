@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { DB, Query, ID, type Models } from '~/Util/appwrite'
-import { DB_ID, COLLECTION_DEALS, COLLECTION_CUSTOMERS } from '~/constants/app.constants'
+import { ref, computed, onMounted } from "vue";
+import { DB, Query, ID, type Models } from "~/Util/appwrite";
+import {
+  DB_ID,
+  COLLECTION_DEALS,
+  COLLECTION_CUSTOMERS,
+} from "~/constants/app.constants";
+import { useSeoMeta } from "nuxt/app";
 
 interface Customer extends Models.Document {
   name: string;
@@ -10,7 +15,7 @@ interface Customer extends Models.Document {
   company?: string;
 }
 
-type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 'done';
+type DealStatus = "todo" | "to-be-agreed" | "in-progress" | "produced" | "done";
 
 interface Deal extends Models.Document {
   name: string;
@@ -29,7 +34,6 @@ interface PaymentWithCustomer extends Deal {
   customer?: Customer;
 }
 
-
 interface StatusOption {
   value: DealStatus;
   label: string;
@@ -42,27 +46,43 @@ const selectedPayment = ref<PaymentWithCustomer | null>(null);
 const isOpenForm = ref<boolean>(false);
 const isPending = ref<boolean>(false);
 
-const name = ref<string>('');
-const price = ref<string>('');
-const customerName = ref<string>('');
-const customerEmail = ref<string>('');
-const description = ref<string>('');
-const status = ref<DealStatus>('todo');
-const paymentMethod = ref<string>('');
+const name = ref<string>("");
+const price = ref<string>("");
+const customerName = ref<string>("");
+const customerEmail = ref<string>("");
+const description = ref<string>("");
+const status = ref<DealStatus>("todo");
+const paymentMethod = ref<string>("");
 const quantity = ref<number>(1);
-const notes = ref<string>('');
+const notes = ref<string>("");
 
-const searchQuery = ref<string>('');
-const statusFilter = ref<string>('');
+const searchQuery = ref<string>("");
+const statusFilter = ref<string>("");
 const currentPage = ref<number>(1);
 const itemsPerPage = 10;
 
 const statusOptions: StatusOption[] = [
-  { value: 'todo', label: 'Новая', color: 'bg-gray-500/20 text-gray-500' },
-  { value: 'to-be-agreed', label: 'На согласовании', color: 'bg-blue-500/20 text-blue-500' },
-  { value: 'in-progress', label: 'В работе', color: 'bg-yellow-500/20 text-yellow-500' },
-  { value: 'produced', label: 'Произведено', color: 'bg-purple-500/20 text-purple-500' },
-  { value: 'done', label: 'Выполнено', color: 'bg-green-500/20 text-green-500' }
+  { value: "todo", label: "Новая", color: "bg-gray-500/20 text-gray-500" },
+  {
+    value: "to-be-agreed",
+    label: "На согласовании",
+    color: "bg-blue-500/20 text-blue-500",
+  },
+  {
+    value: "in-progress",
+    label: "В работе",
+    color: "bg-yellow-500/20 text-yellow-500",
+  },
+  {
+    value: "produced",
+    label: "Произведено",
+    color: "bg-purple-500/20 text-purple-500",
+  },
+  {
+    value: "done",
+    label: "Выполнено",
+    color: "bg-green-500/20 text-green-500",
+  },
 ];
 
 onMounted(() => {
@@ -70,31 +90,35 @@ onMounted(() => {
 });
 
 const getStatusLabel = (statusValue: DealStatus): string => {
-  const option = statusOptions.find(opt => opt.value === statusValue);
+  const option = statusOptions.find((opt) => opt.value === statusValue);
   return option ? option.label : statusValue;
 };
 
 const getStatusClass = (statusValue: DealStatus): string => {
-  const option = statusOptions.find(opt => opt.value === statusValue);
-  return option ? option.color : 'bg-gray-500/20 text-gray-500';
+  const option = statusOptions.find((opt) => opt.value === statusValue);
+  return option ? option.color : "bg-gray-500/20 text-gray-500";
 };
 
 const fetchPayments = async (): Promise<void> => {
   loading.value = true;
   try {
     const deals = await DB.listDocuments<Deal>(DB_ID, COLLECTION_DEALS, [
-      Query.orderDesc('$createdAt'),
-      Query.limit(100)
+      Query.orderDesc("$createdAt"),
+      Query.limit(100),
     ]);
 
     const paymentsWithCustomers = await Promise.all(
       deals.documents.map(async (deal) => {
         if (deal.customer) {
           try {
-            const customer = await DB.getDocument<Customer>(DB_ID, COLLECTION_CUSTOMERS, deal.customer);
+            const customer = await DB.getDocument<Customer>(
+              DB_ID,
+              COLLECTION_CUSTOMERS,
+              deal.customer
+            );
             return { ...deal, customer };
           } catch (error) {
-            console.warn('Клиент не найден:', error);
+            console.warn("Клиент не найден:", error);
             return deal as PaymentWithCustomer;
           }
         }
@@ -104,8 +128,8 @@ const fetchPayments = async (): Promise<void> => {
 
     payments.value = paymentsWithCustomers;
   } catch (error) {
-    console.error('Ошибка загрузки платежей:', error);
-    alert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+    console.error("Ошибка загрузки платежей:", error);
+    alert("Ошибка загрузки данных. Проверьте подключение к интернету.");
   } finally {
     loading.value = false;
   }
@@ -114,21 +138,30 @@ const fetchPayments = async (): Promise<void> => {
 const createDeal = async (): Promise<void> => {
   isPending.value = true;
   try {
-    if (!name.value || !price.value || !customerName.value || !customerEmail.value) {
-      alert('Заполните все обязательные поля (отмечены *)');
+    if (
+      !name.value ||
+      !price.value ||
+      !customerName.value ||
+      !customerEmail.value
+    ) {
+      alert("Заполните все обязательные поля (отмечены *)");
       isPending.value = false;
       return;
     }
     let customerId: string;
     try {
-      const existingCustomers = await DB.listDocuments<Customer>(DB_ID, COLLECTION_CUSTOMERS, [
-        Query.equal('email', customerEmail.value),
-        Query.limit(1)
-      ]);
+      const existingCustomers = await DB.listDocuments<Customer>(
+        DB_ID,
+        COLLECTION_CUSTOMERS,
+        [Query.equal("email", customerEmail.value), Query.limit(1)]
+      );
 
       if (existingCustomers.documents.length > 0) {
         customerId = existingCustomers.documents[0].$id;
-        console.log('Используем существующего клиента:', existingCustomers.documents[0].name);
+        console.log(
+          "Используем существующего клиента:",
+          existingCustomers.documents[0].name
+        );
       } else {
         const customerData: Partial<Customer> = {
           name: customerName.value,
@@ -142,11 +175,11 @@ const createDeal = async (): Promise<void> => {
           customerData as Customer
         );
         customerId = customer.$id;
-        console.log('Создан новый клиент:', customer.name);
+        console.log("Создан новый клиент:", customer.name);
       }
     } catch (error) {
-      console.error('Ошибка при работе с клиентом:', error);
-      alert('Ошибка при обработке клиента. Попробуйте еще раз.');
+      console.error("Ошибка при работе с клиентом:", error);
+      alert("Ошибка при обработке клиента. Попробуйте еще раз.");
       isPending.value = false;
       return;
     }
@@ -173,15 +206,19 @@ const createDeal = async (): Promise<void> => {
     await fetchPayments();
     isOpenForm.value = false;
 
-    alert('Сделка успешно создана!');
+    alert("Сделка успешно создана!");
   } catch (error: any) {
-    console.error('Ошибка создания сделки:', error);
+    console.error("Ошибка создания сделки:", error);
 
-    if (error.message.includes('Unknown attribute')) {
+    if (error.message.includes("Unknown attribute")) {
       const attribute = error.message.match(/"([^"]+)"/)?.[1];
-      alert(`Ошибка: поле "${attribute}" не существует в коллекции. Добавьте его через Appwrite консоль или уберите из формы.`);
-    } else if (error.message.includes('Invalid document structure')) {
-      alert(`Ошибка: некорректная структура данных. Проверьте, что все поля соответствуют структуре коллекции в Appwrite.`);
+      alert(
+        `Ошибка: поле "${attribute}" не существует в коллекции. Добавьте его через Appwrite консоль или уберите из формы.`
+      );
+    } else if (error.message.includes("Invalid document structure")) {
+      alert(
+        `Ошибка: некорректная структура данных. Проверьте, что все поля соответствуют структуре коллекции в Appwrite.`
+      );
     } else {
       alert(`Ошибка создания сделки: ${error.message}`);
     }
@@ -192,56 +229,64 @@ const createDeal = async (): Promise<void> => {
 
 const checkCollectionsStructure = async (): Promise<void> => {
   try {
-    console.log('Проверка структуры коллекций...');
+    console.log("Проверка структуры коллекций...");
 
     const customersAttrs = await DB.listAttributes(DB_ID, COLLECTION_CUSTOMERS);
-    console.log('Поля коллекции customers:', customersAttrs.attributes.map((a: any) => a.key));
+    console.log(
+      "Поля коллекции customers:",
+      customersAttrs.attributes.map((a: any) => a.key)
+    );
 
     const dealsAttrs = await DB.listAttributes(DB_ID, COLLECTION_DEALS);
-    console.log('Поля коллекции deals:', dealsAttrs.attributes.map((a: any) => a.key));
+    console.log(
+      "Поля коллекции deals:",
+      dealsAttrs.attributes.map((a: any) => a.key)
+    );
 
-    const statusAttr = dealsAttrs.attributes.find((a: any) => a.key === 'status');
+    const statusAttr = dealsAttrs.attributes.find(
+      (a: any) => a.key === "status"
+    );
     if (statusAttr && statusAttr.format) {
-      console.log('Допустимые значения для status:', statusAttr.format);
+      console.log("Допустимые значения для status:", statusAttr.format);
     }
   } catch (error) {
-    console.error('Ошибка проверки структуры:', error);
+    console.error("Ошибка проверки структуры:", error);
   }
 };
 
 const resetForm = (): void => {
-  name.value = '';
-  price.value = '';
-  customerName.value = '';
-  customerEmail.value = '';
-  description.value = '';
-  status.value = 'todo';
-  paymentMethod.value = '';
+  name.value = "";
+  price.value = "";
+  customerName.value = "";
+  customerEmail.value = "";
+  description.value = "";
+  status.value = "todo";
+  paymentMethod.value = "";
   quantity.value = 1;
-  notes.value = '';
+  notes.value = "";
 };
 
 const onSubmit = async (e: Event): Promise<void> => {
   e.preventDefault();
 
   if (!name.value.trim()) {
-    alert('Введите название сделки');
+    alert("Введите название сделки");
     return;
   }
 
   const priceNum = parseFloat(price.value);
   if (!price.value || isNaN(priceNum) || priceNum <= 0) {
-    alert('Введите корректную цену');
+    alert("Введите корректную цену");
     return;
   }
 
   if (!customerName.value.trim()) {
-    alert('Введите имя клиента');
+    alert("Введите имя клиента");
     return;
   }
 
   if (!customerEmail.value.trim()) {
-    alert('Введите email клиента');
+    alert("Введите email клиента");
     return;
   }
 
@@ -261,62 +306,81 @@ const filteredPayments = computed((): PaymentWithCustomer[] => {
         p.customerName,
         p.customerEmail,
         p.description,
-        p.paymentMethod
+        p.paymentMethod,
       ];
-      return searchableFields.some(field =>
-        field && typeof field === 'string' && field.toLowerCase().includes(query)
+      return searchableFields.some(
+        (field) =>
+          field &&
+          typeof field === "string" &&
+          field.toLowerCase().includes(query)
       );
     });
   }
 
   if (statusFilter.value) {
-    filtered = filtered.filter((p: PaymentWithCustomer) => p.status === statusFilter.value);
+    filtered = filtered.filter(
+      (p: PaymentWithCustomer) => p.status === statusFilter.value
+    );
   }
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
   return filtered.slice(start, end);
 });
 const totalPayments = computed((): number => payments.value.length);
-const completedPayments = computed((): number => payments.value.filter(p => p.status === 'done').length);
-const pendingPayments = computed((): number => payments.value.filter(p => p.status === 'in-progress').length);
-const totalAmount = computed((): number => payments.value.reduce((sum, p) => sum + (p.price || 0), 0));
+const completedPayments = computed(
+  (): number => payments.value.filter((p) => p.status === "done").length
+);
+const pendingPayments = computed(
+  (): number => payments.value.filter((p) => p.status === "in-progress").length
+);
+const totalAmount = computed((): number =>
+  payments.value.reduce((sum, p) => sum + (p.price || 0), 0)
+);
 
 const formatDate = (dateString: string): string => {
-  if (!dateString) return 'Нет данных';
+  if (!dateString) return "Нет данных";
   const date = new Date(dateString);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+  return date.toLocaleDateString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 };
 
 const formatTime = (dateString: string): string => {
-  if (!dateString) return 'Нет данных';
+  if (!dateString) return "Нет данных";
   const date = new Date(dateString);
-  return date.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
-const togglePaymentStatus = async (payment: PaymentWithCustomer): Promise<void> => {
+const togglePaymentStatus = async (
+  payment: PaymentWithCustomer
+): Promise<void> => {
   try {
-    const statusIndex = statusOptions.findIndex(opt => opt.value === payment.status);
+    const statusIndex = statusOptions.findIndex(
+      (opt) => opt.value === payment.status
+    );
     const nextStatusIndex = (statusIndex + 1) % statusOptions.length;
     const newStatus: DealStatus = statusOptions[nextStatusIndex].value;
 
     await DB.updateDocument<Deal>(DB_ID, COLLECTION_DEALS, payment.$id, {
-      status: newStatus
+      status: newStatus,
     } as Partial<Deal>);
 
     payment.status = newStatus;
 
-    alert(`Статус сделки #${payment.$id.slice(-6)} изменен на "${getStatusLabel(newStatus)}"`);
+    alert(
+      `Статус сделки #${payment.$id.slice(-6)} изменен на "${getStatusLabel(
+        newStatus
+      )}"`
+    );
 
     fetchPayments();
   } catch (error: any) {
-    console.error('Ошибка обновления статуса:', error);
+    console.error("Ошибка обновления статуса:", error);
     alert(`Ошибка обновления статуса: ${error.message}`);
   }
 };
@@ -361,12 +425,16 @@ useSeoMeta({
 
         <div class="bg-card border border-border rounded-xl p-4">
           <p class="text-sm text-muted-foreground mb-1">Выполнено</p>
-          <p class="text-2xl font-bold text-green-500">{{ completedPayments }}</p>
+          <p class="text-2xl font-bold text-green-500">
+            {{ completedPayments }}
+          </p>
         </div>
 
         <div class="bg-card border border-border rounded-xl p-4">
           <p class="text-sm text-muted-foreground mb-1">В работе</p>
-          <p class="text-2xl font-bold text-yellow-500">{{ pendingPayments }}</p>
+          <p class="text-2xl font-bold text-yellow-500">
+            {{ pendingPayments }}
+          </p>
         </div>
 
         <div class="bg-card border border-border rounded-xl p-4">
@@ -389,7 +457,7 @@ useSeoMeta({
         <div class="flex gap-2">
           <select
             v-model="statusFilter"
-            class="px-4 py-3 bg-card border border-input rounded-lg text-white"
+            class="px-4 py-3 bg-card border border-input rounded-lg text-white cursor-pointer"
           >
             <option value="">Все статусы</option>
             <option
@@ -402,7 +470,7 @@ useSeoMeta({
           </select>
           <button
             @click="fetchPayments"
-            class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
+            class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 cursor-pointer"
           >
             Обновить
           </button>
@@ -412,9 +480,14 @@ useSeoMeta({
       <div class="mb-6">
         <button
           @click="isOpenForm = true"
-          class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+          class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 cursor-pointer"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -437,33 +510,53 @@ useSeoMeta({
         <div v-else-if="payments.length === 0" class="p-8 text-center">
           <div class="text-4xl mb-4">💰</div>
           <p class="text-xl font-semibold text-white mb-2">Платежей пока нет</p>
-          <p class="text-muted-foreground">Начните добавлять сделки и платежи</p>
+          <p class="text-muted-foreground">
+            Начните добавлять сделки и платежи
+          </p>
         </div>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="bg-muted border-b border-input">
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">#</th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
+                  #
+                </th>
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Компания/Клиент
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Товар/Услуга
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Email
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Цена
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Дата создания
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Статус
                 </th>
-                <th class="text-left p-4 text-sm font-medium text-muted-foreground">
+                <th
+                  class="text-left p-4 text-sm font-medium text-muted-foreground"
+                >
                   Действия
                 </th>
               </tr>
@@ -484,11 +577,17 @@ useSeoMeta({
                 </td>
                 <td class="p-4">
                   <div class="font-medium text-white">
-                    {{ payment.customer?.name || payment.customerName || "Без названия" }}
+                    {{
+                      payment.customer?.name ||
+                      payment.customerName ||
+                      "Без названия"
+                    }}
                   </div>
                   <div class="text-sm text-muted-foreground">
                     {{
-                      payment.customer?.email || payment.customerEmail || "Нет контакта"
+                      payment.customer?.email ||
+                      payment.customerEmail ||
+                      "Нет контакта"
                     }}
                   </div>
                 </td>
@@ -514,12 +613,17 @@ useSeoMeta({
                   <div class="font-semibold text-white">
                     {{ payment.price.toLocaleString() }} ₽
                   </div>
-                  <div v-if="payment.paymentMethod" class="text-xs text-muted-foreground">
+                  <div
+                    v-if="payment.paymentMethod"
+                    class="text-xs text-muted-foreground"
+                  >
                     {{ payment.paymentMethod }}
                   </div>
                 </td>
                 <td class="p-4">
-                  <div class="text-sm">{{ formatDate(payment.$createdAt) }}</div>
+                  <div class="text-sm">
+                    {{ formatDate(payment.$createdAt) }}
+                  </div>
                   <div class="text-xs text-muted-foreground">
                     {{ formatTime(payment.$createdAt) }}
                   </div>
@@ -538,7 +642,7 @@ useSeoMeta({
                   <div class="flex gap-2">
                     <button
                       @click="togglePaymentStatus(payment)"
-                      class="p-2 hover:bg-input rounded-lg transition-colors"
+                      class="p-2 hover:bg-input rounded-lg transition-colors cursor-pointer"
                       :title="'Изменить статус на следующий'"
                     >
                       <svg
@@ -572,7 +676,7 @@ useSeoMeta({
                     </button>
                     <button
                       @click="openPaymentDetails(payment)"
-                      class="p-2 hover:bg-input rounded-lg transition-colors"
+                      class="p-2 hover:bg-input rounded-lg transition-colors cursor-pointer"
                       title="Подробнее"
                     >
                       <svg
@@ -601,13 +705,14 @@ useSeoMeta({
           class="flex items-center justify-between p-4 border-t border-input"
         >
           <div class="text-sm text-muted-foreground">
-            Показано {{ filteredPayments.length }} из {{ payments.length }} платежей
+            Показано {{ filteredPayments.length }} из
+            {{ payments.length }} платежей
           </div>
           <div class="flex gap-2">
             <button
               @click="previousPage"
               :disabled="currentPage === 1"
-              class="px-3 py-2 border border-input rounded-lg hover:bg-muted disabled:opacity-50"
+              class="px-3 py-2 border border-input rounded-lg hover:bg-muted disabled:opacity-50 cursor-pointer"
             >
               Назад
             </button>
@@ -615,7 +720,7 @@ useSeoMeta({
             <button
               @click="nextPage"
               :disabled="currentPage * itemsPerPage >= payments.length"
-              class="px-3 py-2 border border-input rounded-lg hover:bg-muted disabled:opacity-50"
+              class="px-3 py-2 border border-input rounded-lg hover:bg-muted disabled:opacity-50 cursor-pointer"
             >
               Вперед
             </button>
@@ -634,8 +739,16 @@ useSeoMeta({
       >
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-semibold text-white">Детали сделки</h3>
-          <button @click="selectedPayment = null" class="p-2 hover:bg-input rounded-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            @click="selectedPayment = null"
+            class="p-2 hover:bg-input rounded-lg"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -732,7 +845,9 @@ useSeoMeta({
                   </p>
                 </div>
                 <div>
-                  <p class="text-sm text-muted-foreground mb-1">Способ оплаты</p>
+                  <p class="text-sm text-muted-foreground mb-1">
+                    Способ оплаты
+                  </p>
                   <p class="font-medium text-white">
                     {{ selectedPayment.paymentMethod || "Не указан" }}
                   </p>
@@ -742,7 +857,9 @@ useSeoMeta({
           </div>
 
           <div>
-            <h4 class="font-semibold text-white mb-3">Дополнительная информация</h4>
+            <h4 class="font-semibold text-white mb-3">
+              Дополнительная информация
+            </h4>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p class="text-sm text-muted-foreground mb-1">Дата создания</p>
@@ -751,16 +868,22 @@ useSeoMeta({
                 </p>
               </div>
               <div>
-                <p class="text-sm text-muted-foreground mb-1">Дата обновления</p>
+                <p class="text-sm text-muted-foreground mb-1">
+                  Дата обновления
+                </p>
                 <p class="font-medium text-white">
                   {{
-                    formatDate(selectedPayment.$updatedAt || selectedPayment.$createdAt)
+                    formatDate(
+                      selectedPayment.$updatedAt || selectedPayment.$createdAt
+                    )
                   }}
                 </p>
               </div>
               <div>
                 <p class="text-sm text-muted-foreground mb-1">Примечания</p>
-                <p class="text-white">{{ selectedPayment.notes || "Нет примечаний" }}</p>
+                <p class="text-white">
+                  {{ selectedPayment.notes || "Нет примечаний" }}
+                </p>
               </div>
             </div>
           </div>
@@ -792,9 +915,19 @@ useSeoMeta({
         class="bg-card rounded-xl border border-border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-semibold text-white">Добавить новую сделку</h3>
-          <button @click="isOpenForm = false" class="p-2 hover:bg-input rounded-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h3 class="text-xl font-semibold text-white">
+            Добавить новую сделку
+          </h3>
+          <button
+            @click="isOpenForm = false"
+            class="p-2 hover:bg-input rounded-lg"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -820,7 +953,9 @@ useSeoMeta({
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-white mb-1">Цена (₽) *</label>
+              <label class="block text-sm font-medium text-white mb-1"
+                >Цена (₽) *</label
+              >
               <input
                 v-model="price"
                 type="number"
@@ -858,7 +993,9 @@ useSeoMeta({
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-white mb-1">Описание</label>
+              <label class="block text-sm font-medium text-white mb-1"
+                >Описание</label
+              >
               <textarea
                 v-model="description"
                 rows="3"
@@ -868,7 +1005,9 @@ useSeoMeta({
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-white mb-1">Статус</label>
+              <label class="block text-sm font-medium text-white mb-1"
+                >Статус</label
+              >
               <select
                 v-model="status"
                 class="w-full px-4 py-3 bg-card border border-input rounded-lg text-white"
@@ -895,7 +1034,9 @@ useSeoMeta({
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-white mb-1">Количество</label>
+              <label class="block text-sm font-medium text-white mb-1"
+                >Количество</label
+              >
               <input
                 v-model="quantity"
                 type="number"
@@ -907,7 +1048,9 @@ useSeoMeta({
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-white mb-1">Примечания</label>
+            <label class="block text-sm font-medium text-white mb-1"
+              >Примечания</label
+            >
             <textarea
               v-model="notes"
               rows="2"

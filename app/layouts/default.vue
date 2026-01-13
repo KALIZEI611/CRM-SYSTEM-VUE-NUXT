@@ -7,7 +7,7 @@ import { onMounted, ref } from "vue";
 const isLoadingStore = useIsLoadingStore();
 const store = useAuthStore();
 const router = useRouter();
-const authCheckCompleted = ref(false); 
+const authCheckCompleted = ref(false);
 
 const publicRoutes = ["/login", "/register"];
 
@@ -34,7 +34,6 @@ onMounted(async () => {
   } catch (error: any) {
     store.setAuthChecked(true);
 
-    // Только 401 и не на публичной странице
     if (error.code === 401 && !publicRoutes.includes(currentPath)) {
       await router.push("/login");
     }
