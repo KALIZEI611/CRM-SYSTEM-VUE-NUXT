@@ -1,3 +1,5 @@
+import { defineStore } from "pinia";
+
 interface iAuthStore {
   email: string;
   name: string;
@@ -15,7 +17,7 @@ const defaultValue: { user: iAuthStore } = {
 export const useAuthStore = defineStore("auth", () => {
   const isAuth = ref(false);
   const user = ref(null);
-  const authChecked = ref(false); 
+  const authChecked = ref(false);
 
   function set(userData: any) {
     user.value = userData;
