@@ -206,7 +206,7 @@ useSeoMeta({
                 <div class="mb-6">
                   <button
                     @click="closeArticle"
-                    class="flex items-center gap-2 text-primary hover:text-primary/80 mb-2 transition-colors"
+                    class="flex items-center gap-2 text-primary hover:text-primary/80 mb-2 transition-colors cursor-pointer"
                   >
                     <Icon name="radix-icons:arrow-left" size="20" />
                     Назад к статьям
@@ -250,7 +250,7 @@ useSeoMeta({
                       <button
                         @click="() => sendFeedback(true)"
                         :class="[
-                          'px-4 py-2 rounded-lg border transition-all',
+                          'px-4 py-2 rounded-lg border transition-all cursor-pointer',
                           userFeedback === true
                             ? 'bg-lime-700 border-lime-700 text-white'
                             : 'bg-muted border-input text-muted-foreground hover:bg-muted/80 hover:text-foreground',
@@ -268,7 +268,7 @@ useSeoMeta({
                       <button
                         @click="() => sendFeedback(false)"
                         :class="[
-                          'px-4 py-2 rounded-lg border transition-all',
+                          'px-4 py-2 rounded-lg border transition-all cursor-pointer',
                           userFeedback === false
                             ? 'bg-red-800 border-red-800 text-white'
                             : 'bg-muted border-input text-muted-foreground hover:bg-muted/80 hover:text-foreground',
@@ -311,7 +311,7 @@ useSeoMeta({
 
     <button
       @click="openFeedbackModal"
-      class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center z-40"
+      class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center z-40 cursor-pointer"
     >
       <Icon name="fluent:chat-20-filled" size="20" />
     </button>
@@ -335,7 +335,7 @@ useSeoMeta({
               >
               <select
                 v-model="feedbackForm.type"
-                class="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                class="cursor-pointer w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               >
                 <option value="question">Вопрос</option>
                 <option value="suggestion">Предложение</option>
@@ -374,13 +374,13 @@ useSeoMeta({
               <button
                 type="button"
                 @click="closeFeedbackModal"
-                class="px-4 py-2 border border-input rounded-lg text-foreground hover:bg-muted transition-colors"
+                class="px-4 py-2 border border-input rounded-lg text-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 Отмена
               </button>
               <button
                 type="submit"
-                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
               >
                 Отправить
               </button>
